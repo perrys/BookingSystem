@@ -30,6 +30,11 @@ else if (!empty($HTTP_GET_VARS))
     extract($HTTP_GET_VARS, EXTR_OVERWRITE);
 }
 
+if (! empty($area))
+{
+  $area = intval($area);
+}
+
 // -- POST --
 if (!empty($_POST))
 {
