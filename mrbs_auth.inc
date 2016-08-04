@@ -79,4 +79,42 @@ function showAccessDenied($day, $month, $year, $area)
 </HTML>
 <?php
 }
+
+function createToken($year, $month, $day, $hour, $minute, $room) 
+{
+    $message = sprintf("%04d-%02d-%02dT%02d:%02d/%d", intval($year), intval($month), intval($day), intval($hour), intval($minute), intval($room));
+    return hash_hmac("md5", $message, $csrf_token_salt);
+}
+
+function verifyToken($start_year, $start_month, $start_day, $start_hour, $start_min, $room_id, $token)
+{
+    return $token == createToken($start_year, $start_month, $start_day, $start_hour, $start_min, $room_id);
+}
+
+/* showInvalidRequest()
+ * 
+ * Displays an appropate message when an invalid request is detected,
+ * which usually means that the requester is up to something...
+ * 
+ * Returns: Nothing
+ */
+function showInvalidRequest($day, $month, $year, $area)
+{
+    global $HTTP_REFERER;
+
+    print_header($day, $month, $year, $area);
+?>
+  <H1>Invalid Request</H1>
+  <P>
+   Attempting to book a court without clicking through the calendar page is not allowed. 
+  </P>
+  <P>
+   This incident has been reported. Please do not do this again.
+  </P>
+ </BODY>
+</HTML>
+<?php
+}
+
+
 ?>

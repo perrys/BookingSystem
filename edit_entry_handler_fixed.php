@@ -29,6 +29,13 @@ if(!getAuthorised(1))
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] != 'POST' || 
+    !verifyToken($year, $month, $day, $hour, $minute, $room_id, $token))
+{
+    showInvalidRequest($day, $month, $year, $area);
+    exit;
+}
+
 if(!getWritable($create_by, getUserName()))
 {
     showAccessDenied($day, $month, $year, $area);

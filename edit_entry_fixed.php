@@ -62,6 +62,12 @@ if(!getWritable($create_by, getUserName()))
 	exit;
 }
 
+if(!verifyToken($start_year, $start_month, $start_day, $start_hour, $start_min, $room_id, $token))
+{
+	showInvalidRequest($day, $month, $year, $area);
+	exit;
+}
+
 print_header($day, $month, $year, $area);
 
 ?>
@@ -142,7 +148,7 @@ function OnAllDayClick(allday) // Executed when the user clicks on the all_day c
 $name = ucwords ($name) ;
 ?>
 
-<FORM NAME="main" ACTION="edit_entry_handler_fixed.php" METHOD="GET">
+<FORM NAME="main" ACTION="edit_entry_handler_fixed.php" METHOD="POST">
 
 <TABLE BORDER=0>
 
@@ -287,6 +293,7 @@ if ( ( !isset( $id ) ) Xor ( isset( $rep_type ) && ( $rep_type != 0 ) && ( "seri
 <INPUT TYPE=HIDDEN NAME="create_by" VALUE="<?php echo $create_by?>">
 <INPUT TYPE=HIDDEN NAME="rep_id"    VALUE="<?php echo $rep_id?>">
 <INPUT TYPE=HIDDEN NAME="edit_type" VALUE="<?php echo $edit_type?>">
+<INPUT TYPE=HIDDEN NAME="token"   VALUE="<?php echo $token?>">
 <?php if(isset($id)) echo "<INPUT TYPE=HIDDEN NAME=\"id\"        VALUE=\"$id\">\n";
 ?>
 
