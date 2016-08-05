@@ -114,6 +114,18 @@ function showInvalidRequest($day, $month, $year, $area)
  </BODY>
 </HTML>
 <?php
+
+    include_once "functions_mail_fixed.inc";
+    $user = getUserName();
+    if (! isset($user))
+        $user = "<unknown>";
+    $subject = "Invalid Court Booking Request";
+    $body = $user . " sent an invalid request:\n\n";
+    ob_start();
+    var_dump($_SERVER);
+    $body = $body . ob_get_clean();
+    sendMail($mrbs_admin_email, $subject, $body);
+
 }
 
 
