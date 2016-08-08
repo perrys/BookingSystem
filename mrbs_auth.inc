@@ -116,6 +116,7 @@ function showInvalidRequest($day, $month, $year, $area)
 </HTML>
 <?php
 
+    global $mrbs_admin_email;
     include_once "functions_mail_fixed.inc";
     $user = getUserName();
     if (! isset($user))
