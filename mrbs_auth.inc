@@ -82,6 +82,7 @@ function showAccessDenied($day, $month, $year, $area)
 
 function createToken($year, $month, $day, $hour, $minute, $room) 
 {
+    global $csrf_token_salt;
     $message = sprintf("%04d-%02d-%02dT%02d:%02d/%d", intval($year), intval($month), intval($day), intval($hour), intval($minute), intval($room));
     return hash_hmac("md5", $message, $csrf_token_salt);
 }
