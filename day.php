@@ -318,7 +318,7 @@ else {$book = 0;}
 					
 						if (($advance + (45 * 60) > 0) AND ($advance < $advance_limit * 24 * 60 * 60 ) )	
 						{
-                                                    $token = createToken($year, $month, $day, $hour, $minute, $room);
+                                                    $token = createTokenYMD($year, $month, $day, $hour, $minute, $room);
                                                     echo "<a href=\"edit_entry$suffix.php?area=$area&room=$room&hour=$hour&minute=$minute&year=$year&month=$month&day=$day&token=$token\"><img src=new.gif width=10 height=10 border=0></a>";
                                                 }
 					 else {echo " - " ;}

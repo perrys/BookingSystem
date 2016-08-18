@@ -80,11 +80,22 @@ function showAccessDenied($day, $month, $year, $area)
 <?php
 }
 
-function createToken($year, $month, $day, $hour, $minute, $room) 
+function createToken($datetime, $room) 
 {
     global $csrf_token_salt;
-    $message = sprintf("%04d-%02d-%02dT%02d:%02d/%d", intval($year), intval($month), intval($day), intval($hour), intval($minute), intval($room));
+    if (! is_string($datetime))
+    {
+        assert("get_class($datetime) == \"DateTime\"");
+        $datetime = $datetime->format("Y-m-dTH:i");
+    }
+    $message = sprintf("%s/%d", $datetime, intval($room));
     return hash_hmac("md5", $message, $csrf_token_salt);
+}
+
+function createTokenYMD($year, $month, $day, $hour, $minute, $room) 
+{
+    $datetime = sprintf("%04d-%02d-%02dT%02d:%02d", intval($year), intval($month), intval($day), intval($hour), intval($minute));
+    return createToken($datetime, $room);
 }
 
 function verifyToken($start_year, $start_month, $start_day, $start_hour, $start_min, $room_id, $token)

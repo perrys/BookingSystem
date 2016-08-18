@@ -414,7 +414,7 @@ if (($stagger == 55) OR ($stagger == 56)) {$book = 1;}
 					if ( ($advance + (45 * 60) > 0) AND ($advance < $advance_limit * 24 * 60 * 60 ) )			
 						
 					{	
-                                                $token = createToken($wyear, $wmonth, $wday, $hour, $minute, $room);
+                                                $token = createTokenYMD($wyear, $wmonth, $wday, $hour, $minute, $room);
                                                 echo "<a href=\"edit_entry_fixed.php?room=$room&area=$area"
 						. "&hour=$hour&minute=$minute&year=$wyear&month=$wmonth"
 						. "&day=$wday&token=$token\"><img src=new.gif width=10 height=10 border=0></a>"; }
