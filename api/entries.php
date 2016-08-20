@@ -31,23 +31,31 @@ include "../mrbs_auth.inc";
 
 $SECONDS_PER_DAY = 24 * 60 * 60;
 
+function truncate_to_midnight($ts)
+{
+    global $SECONDS_PER_DAY;
+    return $SECONDS_PER_DAY * intval($ts / $SECONDS_PER_DAY);
+}
+
 $now_timestamp = time();
-$today_timestamp = $SECONDS_PER_DAY * ($now_timestamp / $SECONDS_PER_DAY);
+$today_timestamp = truncate_to_midnight($now_timestamp);
 $area = get_default_area();
+$timezone = new DateTimeZone('Europe/London');
 
 if (isset($start_date))
 {
-    $start_timestamp = DateTime::createFromFormat("Y-m-d", $start_date)->getTimestamp();
+    $start_timestamp = truncate_to_midnight(DateTime::createFromFormat("Y-m-d", $start_date, $timezone)->getTimestamp());    
 } else {
     $start_timestamp = $today_timestamp;
 }
 
 if (isset($end_date))
 {
-    $end_timestamp = DateTime::createFromFormat("Y-m-d", $end_date)->getTimestamp();
+    $end_timestamp = truncate_to_midnight(DateTime::createFromFormat("Y-m-d", $end_date, $timezone)->getTimestamp());
 } else {
     $end_timestamp = $start_timestamp + ($advance_limit + 1) * $SECONDS_PER_DAY;
 }
+
 
 $result = array();
 
@@ -90,7 +98,7 @@ for ($i = 0; ($row = sql_row($res, $i)); $i++)
 
 function add_free_slots($date, &$day_bookings, $room)
 {
-    global $morningstarts, $morningstarts_minutes, $eveningends, $eveningends_minutes, $resolution, $stagger_set;
+    global $morningstarts, $morningstarts_minutes, $eveningends, $eveningends_minutes, $resolution, $stagger_set, $now_timestamp;
     $resolution_mins  = $resolution / 60;
     $room_offset_mins = ($room-1) * $resolution_mins;
     $start_mins       = $morningstarts * 60 + $morningstarts_minutes + $room_offset_mins; 
@@ -106,6 +114,11 @@ function add_free_slots($date, &$day_bookings, $room)
     {
         $start_time = sprintf("%02d:%02d", $start/60, $start%60);
         if (isset($room_slots[$start_time]))
+        {
+            $last_slot = $room_slots[$start_time];
+            continue;
+        }
+        if (isset($last_slot) && $start < ($last_slot["start_mins"] + $last_slot["duration_mins"]))
             continue;
         $next_start = $end_mins;
         while ($idx < $nbookings)
@@ -123,8 +136,9 @@ function add_free_slots($date, &$day_bookings, $room)
 
         $gap = array("start_mins" => $start,
                      "duration_mins" => $duration,
-                     "start_time" => $start_time,
-                     "token" => createToken(sprintf("%sT%s", $date, $start_time), $room));
+                     "start_time" => $start_time);
+        if ($start > $now_timestamp)
+            $gap["token"] = createToken(sprintf("%sT%s", $date, $start_time), $room);
         $room_slots[$start_time] = $gap;
     }
 }
