@@ -100,7 +100,7 @@ function createTokenYMD($year, $month, $day, $hour, $minute, $room)
 
 function verifyToken($start_year, $start_month, $start_day, $start_hour, $start_min, $room_id, $token)
 {
-    return $token == createToken($start_year, $start_month, $start_day, $start_hour, $start_min, $room_id);
+    return $token == createTokenYMD($start_year, $start_month, $start_day, $start_hour, $start_min, $room_id);
 }
 
 /* showInvalidRequest()
