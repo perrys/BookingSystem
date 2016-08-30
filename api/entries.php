@@ -130,7 +130,7 @@ function add_free_slots($date, &$day_bookings, $room)
     $resolution_mins  = $resolution / 60;
     $room_offset_mins = ($room-1) * $resolution_mins;
     $start_mins       = $morningstarts * 60 + $morningstarts_minutes + $room_offset_mins; 
-    $end_mins         = $eveningends   * 60 + $eveningends_minutes   + $resolution_mins;
+    $end_mins         = $eveningends   * 60 + $eveningends_minutes   + $room_offset_mins - $resolution_mins;
     $default_duration = $resolution_mins * $stagger_set;
 
     $room_slots = &retrieve_or_create($day_bookings, $room);
