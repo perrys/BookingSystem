@@ -103,11 +103,11 @@ for ($i = 0; ($row = sql_row($res, $i)); $i++)
 {
     $room_id    = $row[0];
     $start      = $row[1];
-    $start_dt   = new DateTime(null, $timezone);
-    $start_dt->setTimestamp($start);
-    $start_date = $start_dt->format("Y-m-d");
-    $start_time = $start_dt->format("H:i");
-    $start_mins = to_minutes($start_dt);
+    $slot_dt    = new DateTime(null, $timezone);
+    $slot_dt->setTimestamp($start);
+    $start_date = $slot_dt->format("Y-m-d");
+    $start_time = $slot_dt->format("H:i");
+    $start_mins = to_minutes($slot_dt);
     $duration   = $row[2] - $start;
     $date_list  = &retrieve_or_create($result, $start_date);
     $room_slots = &retrieve_or_create($date_list, $room_id);
@@ -138,13 +138,13 @@ function add_free_slots($date, &$day_bookings, $room)
     $nbookings  = count($room_slots);
     $idx = 0;
     $start = $start_mins; 
-    $start_dt = clone $date;
-    $start_date = $start_dt->format("Y-m-d");
+    $slot_dt = clone $date;
+    $start_date = $slot_dt->format("Y-m-d");
 
     while ($start < $end_mins) 
     {
-        $start_dt->setTime($start/60, $start%60, 0);
-        $start_time = $start_dt->format("H:i");
+        $slot_dt->setTime($start/60, $start%60, 0);
+        $start_time = $slot_dt->format("H:i");
         if (isset($room_slots[$start_time]))
         {
             $last_slot = $room_slots[$start_time];
@@ -174,7 +174,7 @@ function add_free_slots($date, &$day_bookings, $room)
         $gap = array("start_mins" => $start,
                      "duration_mins" => $duration_mins,
                      "start_time" => $start_time);
-        if ($start_dt > $now_dt  && $start_dt < $cutoff_dt)
+        if ($slot_dt > $now_dt  && $slot_dt < $cutoff_dt)
             $gap["token"] = createToken(sprintf("%sT%s", $start_date, $start_time), $room);
         $room_slots[$start_time] = $gap;
         $start += $duration_mins;
