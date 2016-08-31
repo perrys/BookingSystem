@@ -84,7 +84,7 @@ if (isset($end_date))
 $result = array();
 
 $sql = "SELECT $tbl_room.id, start_time, end_time, name, $tbl_entry.id, type,
-        $tbl_entry.description, $tbl_entry.create_by
+        $tbl_entry.description, $tbl_entry.create_by, $tbl_entry.timestamp
    FROM $tbl_entry, $tbl_room
    WHERE $tbl_entry.room_id = $tbl_room.id
    AND area_id = $area
@@ -119,7 +119,8 @@ for ($i = 0; ($row = sql_row($res, $i)); $i++)
                   "id" => intval($row[4]),
                   "type" => $row[5],
                   "description" => $row[6],
-                  "created_by" => $row[7]);
+                  "created_by" => $row[7],
+                  "timestamp" => $row[8]);
 
     $room_slots[$start_time] = $slot;
 }
