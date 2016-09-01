@@ -138,25 +138,30 @@ function add_free_slots($date, &$day_bookings, $room)
     reset($room_slots);
     $nbookings  = count($room_slots);
     $idx = 0;
-    $start = $start_mins; 
     $slot_dt = clone $date;
     $start_date = $slot_dt->format("Y-m-d");
 
-    while ($start < $end_mins) 
+    $iter_mins = 7 * 60; # sometimes courts are reserved by admin earlier than they can be booked.
+    while ($iter_mins < $end_mins) 
     {
-        $slot_dt->setTime($start/60, $start%60, 0);
+        $slot_dt->setTime($iter_mins/60, $iter_mins%60, 0);
         $start_time = $slot_dt->format("H:i");
         if (isset($room_slots[$start_time]))
         {
             $last_slot = $room_slots[$start_time];
-            $start += $last_slot["duration_mins"];
+            $iter_mins += $last_slot["duration_mins"];
+            continue;
+        }
+        if ($iter_mins < $start_mins) # look out for extra-early admin bookings
+        {
+            $iter_mins += $resolution_mins;
             continue;
         }
         $next_start = $end_mins;
         while ($idx < $nbookings)
         {
             $next_slot = current($room_slots);
-            if ($next_slot["start_mins"] > $start)
+            if ($next_slot["start_mins"] > $iter_mins)
             {
                 $next_start = $next_slot["start_mins"];
                 break;
@@ -164,21 +169,21 @@ function add_free_slots($date, &$day_bookings, $room)
             next($room_slots);
             ++$idx;
         }
-        $duration_mins = $next_start - $start;
+        $duration_mins = $next_start - $iter_mins;
         if ($duration_mins > $default_duration) 
         {
             # try to align with the normal slots for this court
-            $remainder = ($start - $start_mins) % $default_duration;
+            $remainder = ($iter_mins - $start_mins) % $default_duration;
             $duration_mins = $default_duration - $remainder;
         }
 
-        $gap = array("start_mins" => $start,
+        $gap = array("start_mins" => $iter_mins,
                      "duration_mins" => $duration_mins,
                      "start_time" => $start_time);
         if ($slot_dt > $now_dt  && $slot_dt < $cutoff_dt)
             $gap["token"] = createToken(sprintf("%sT%s", $start_date, $start_time), $room);
         $room_slots[$start_time] = $gap;
-        $start += $duration_mins;
+        $iter_mins += $duration_mins;
     }
 }
         
