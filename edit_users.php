@@ -357,8 +357,8 @@ print "</tr>\n";
 $i = 0; 
 while ($line = sql_row($list, $i++))
     {
-    print "\t<tr>\n";
     $j = -1;
+    print "\t<tr data-id='$line[0]'>\n";
     $this_id = 0;
     foreach ($line as $col_value) 
         {
