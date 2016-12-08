@@ -30,6 +30,32 @@ function getAuthorised($level)
     return authGetUserLevel($user, $auth["admin"]) >= $level;
 }
 
+/* 
+ * Returns the name corresponding to USER_ID, or false if not found
+ * 
+ */
+function getUserNameForID($user_id)
+{
+   global $tbl_users;
+
+   $res = sql_query("select name from $tbl_users where id = $user_id");
+   switch(sql_count($res)) 
+   {
+       case 0:
+         sql_free($res);
+         return false;
+       case 1:
+         $name = sql_row($res, 0)[0];
+         sql_free($res);
+         return $name;
+       default:
+         sql_free($res);
+         throw new Exception("more than one matching user entry for id $user_id");
+   }    
+   return false;
+}
+
+
 /* getWritable($creator, $user)
  * 
  * Determines if a user is able to modify an entry
@@ -80,16 +106,21 @@ function showAccessDenied($day, $month, $year, $area)
 <?php
 }
 
-function createToken($datetime, $room) 
+function createTokenRaw($message) 
 {
     global $csrf_token_salt;
+    return hash_hmac("md5", $message, $csrf_token_salt);
+}
+
+function createToken($datetime, $room) 
+{
     if (! is_string($datetime))
     {
         assert("get_class($datetime) == \"DateTime\"");
         $datetime = $datetime->format("Y-m-dTH:i");
     }
     $message = sprintf("%s/%d", $datetime, intval($room));
-    return hash_hmac("md5", $message, $csrf_token_salt);
+    return createTokenRaw($message);
 }
 
 function createTokenYMD($year, $month, $day, $hour, $minute, $room) 
