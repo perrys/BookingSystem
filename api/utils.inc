@@ -22,10 +22,26 @@ function &retrieve_or_create(&$arr, $key)
     return $target;
 }
 
-# move DT forward by DAYS
-function adjust_dt($dt, $days)
+# move DT forward by DAYS, HOURS and MINUTES
+function adjust_dt($dt, $days, $hours, $minutes)
 {
-    $interval = new DateInterval("P" . $days . "D");
+    $hastime = false;
+    $spec = "P";
+    if ($days > 0) {
+        $spec .= $days . "D";
+    }           
+    if (isset($hours) and $hours > 0) {
+        $spec .= "T" . $hours . "H";
+        $hastime = true;
+    }
+    if (isset($minutes) and $minutes > 0) {
+        if (! $hastime) {
+            $spec .= "T";
+            $hastime = true;
+        }
+        $spec .= $minutes . "M";
+    }
+    $interval = new DateInterval($spec);
     $dt->add($interval);
 }
 
