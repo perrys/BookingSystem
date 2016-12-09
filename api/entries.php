@@ -4,7 +4,7 @@ include "utils.inc";
 
 # Return booking entries in JSON format
 
-if ($_SERVER['REQUEST_METHOD'] != 'GET' && $_SERVER['REQUEST_METHOD'] != 'OPTIONS') 
+if (! ($_SERVER['REQUEST_METHOD'] == 'GET' || $_SERVER['REQUEST_METHOD'] == 'OPTIONS' || $_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'PATCH' || $_SERVER['REQUEST_METHOD'] == 'DELETE') )
 {
     return_error(405, "method not allowed");
 }
@@ -35,7 +35,7 @@ $timezone = new DateTimeZone('Europe/London');
 $now_dt = new DateTime(null, $timezone);
 
 $cutoff_dt = clone $now_dt;
-adjust_dt($cutoff_dt, $advance_limit);
+adjust_dt($cutoff_dt, $advance_limit, 0, 0);
 
 $today_dt =  clone $now_dt;
 $today_dt->setTime(0, 0, 0); # midnight
@@ -52,7 +52,7 @@ if (isset($end_date))
     $end_dt = dt_from_iso_str($end_date, $timezone);
 } else {
     $end_dt = clone $start_dt;    
-    adjust_dt($end_dt, $advance_limit+1);
+    adjust_dt($end_dt, $advance_limit+1, 0, 0);
 }
     
 
@@ -192,5 +192,99 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
     header("Content-Type: application/json");
     echo json_encode($result);
 }
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELETE' || $_SERVER['REQUEST_METHOD'] == 'PATCH')
+{
+    include "../mrbs_sql.inc";
+
+    global $timezone, $tbl_entry;
+    $data = json_decode(file_get_contents('php://input'), true);
+
+    $user_id = $data["user_id"];
+    $expected_token = createTokenRaw(sprintf("id:%d", $user_id));
+
+    if (strcasecmp($expected_token, $data["user_token"]) != 0) {
+        return_error(401, "could not authenticate user ID");
+    }
+
+    $user_name = getUserNameForID($user_id);
+    if (! $user_name)
+        return_error(401, "unrecognized user ID");
+ 
+    if (isset($id)) { # we are altering an existing entry
+        $id = intval($id);
+        $existing_entry = mrbsGetEntryInfo($id);
+        if (! $existing_entry) {
+            return_error(404, "booking not found");
+        }
+        if (! getWritable($existing_entry["create_by"], $user_name)) {
+            return_error(403, "permission dennied for entry $id");
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
+            # handle straight deletion:
+            # TODO: record in delted entries table, and send email
+            $result = mrbsDelEntry($user_name, $id, false, false);
+            if ($result > 0)
+                return_error(204, "deleted entry $id");
+            else
+                return_error(500, "unable to delete entry $id");
+        } else if ($_SERVER['REQUEST_METHOD'] == 'PATCH') {
+            # update an existing
+            try {
+              $nupdated = mrbsUpdateEntry($id, $user_name, $data['name'], $data['type'], $data['description']);
+              if ($nupdated == 0) {
+                return_error(404, "Entry $id not found");
+              }
+            } catch (Exception $e) {
+                # assume it is an issue with the input data
+                return_error(400, $e->getMessage());
+            }
+            return_error(204, "updated entry $id");
+        } else {
+            return_error(405); # method not allowed
+        }
+
+    } else {
+
+        $start_time = dt_from_iso_str($data["date"], $timezone);
+        adjust_dt($start_time, 0, 0, $data["start_mins"]);
+        $end_time = clone $start_time;
+        adjust_dt($end_time, 0, 0, $data["duration_mins"]);
+        
+        $entry_type = 0;
+        $repeat_id  = 0;    
+
+        # Acquire mutex to lock out others trying to book the same slot(s).
+        if (!sql_mutex_lock("$tbl_entry"))
+            return_error(503, "couldn't get database table lock");
+
+        $new_id = mrbsCreateSingleEntry($start_time->getTimeStamp(), 
+                                        $end_time->getTimeStamp(), 
+                                        $entry_type, $repeat_id,
+                                        $data["court"],
+                                        $user_name, 
+                                        $data["name"], 
+                                        $data["type"], 
+                                        $data["description"]);
+
+        if ($new_id == 0) {
+            return_error(500, "ERROR - failed to create new booking ");        
+        }
+
+        # TODO - send email
+
+        sql_mutex_unlock("$tbl_entry");
+    }
+    
+    header("Content-Type: application/json");
+    $result = array("id"    => $new_id,
+                    "start" => $start_time->format(DateTime::ISO8601),
+                    "end"   => $end_time->format(DateTime::ISO8601),
+                    "court" => $data["room"]);
+    
+    echo json_encode($result);
+}
+
 
 ?>
