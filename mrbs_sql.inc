@@ -119,6 +119,46 @@ function mrbsDelEntry($user, $id, $series, $all)
 	return $removed > 0;
 }
 
+/** mrbsUpdateEntry()
+ * 
+ * Update metadata fields for an entry in the database. Note
+ * that meeting time/place fields are not updatable.
+ * 
+ */
+ function mrbsUpdateEntry($id, $owner, $name, $type, $description) {
+    global $tbl_entry;
+
+    $sql = "UPDATE $tbl_entry SET create_by = '$owner'"  ;
+    $updated = false;
+    if (isset($name)) {
+        $name = slashes($name);
+        $sql .= ", name = '$name'";
+        $updated = true;
+    }
+    if (isset($type)) {
+        $type = slashes($type);
+        $sql .= ", type = '$type'";
+        $updated = true;
+    }
+    if (isset($description)) {
+        $description = slashes($description);
+        $sql .= ", description = '$description'";
+        $updated = true;
+    }
+    $sql .= " WHERE id = $id";
+
+    if (! $updated) {
+      throw new Exception("no updatable fields supplied");
+    }
+
+    $num_rows = sql_command($sql);    
+    if ($num_rows < 0) {
+      trigger_error($sql);
+      trigger_error(sql_error());
+    }
+    return $num_rows;
+}
+
 /** mrbsCreateSingleEntry()
  * 
  * Create a single (non-repeating) entry in the database
@@ -154,9 +194,12 @@ function mrbsCreateSingleEntry($starttime, $endtime, $entry_type, $repeat_id, $r
 	                                  create_by,    name,       type,          description)
 	                        VALUES ($starttime, $endtime, $entry_type, $repeat_id, $room_id,
 	                                '$owner',     '$name',    '$type',       '$description')";
-	
-	if (sql_command($sql) < 0) return 0;
-	
+
+	if (sql_command($sql) < 0) {            
+            trigger_error($sql);
+            trigger_error(sql_error());
+            return 0;
+        }
 	return sql_insert_id("$tbl_entry", "id");
 }
 
