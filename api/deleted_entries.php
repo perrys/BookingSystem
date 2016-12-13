@@ -54,13 +54,13 @@ function &get_deleted_entries($start_date, $end_date)
         $start_time = $slot_dt->format("H:i");
         $start_mins = to_minutes($slot_dt);
         $duration   = $row[2] - $start;
-        $date_list  = &retrieve_or_create($result, $start_date);
-        $room_slots = &retrieve_or_create($date_list, $room_id);
         $orig_ts    = new DateTime(null, $timezone);
         $orig_ts->setTimestamp($row[8]);
     
-        $slot = array("start_time" => $start_time, 
+        $slot = array("start_date" => $start_date,
+                      "start_time" => $start_time, 
                       "start_mins" => $start_mins,
+                      "court" => $room_id,
                       "duration_mins" => $duration / 60, 
                       "name" => $row[3],
                       "id" => intval($row[4]),
@@ -72,7 +72,7 @@ function &get_deleted_entries($start_date, $end_date)
                       "deleted_timestamp" => $row[10]
             );
     
-        $room_slots[$start_time] = $slot;
+        array_push($result, $slot);
     }
     return $result;
 }
@@ -81,5 +81,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
 {        
     $result = &get_deleted_entries($start_date, $end_date);
     header("Content-Type: application/json");
-    echo json_encode($result);
+    echo json_encode($result, true);
 }
