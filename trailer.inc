@@ -1,6 +1,8 @@
 <?php
 # $Id: trailer.inc,v 1.10.2.1 2006/10/09 15:54:00 jberanek Exp $
 
+include "version.inc";
+
 if ( $pview != 1 ) {
 
 echo "<P><HR><B>".get_vocab("viewday").":</B>\n";
@@ -73,8 +75,11 @@ echo '<p><center><a href="' . basename($PHP_SELF) . '?' . $QUERY_STRING . '&pvie
 
 <p><center><a href="http://www.court-booking.co.uk" target="_blank">Court Booking System by Jupiterwill</a></center></p>
 
-<p><center>Version 2016.12.13-1</center></p>
-
+<p><center>Version 
+<?php
+echo get_mrbs_version()
+?>
+</center></p>
 <HR>
 </BODY>
 </HTML>
