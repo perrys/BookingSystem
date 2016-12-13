@@ -229,12 +229,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
 
         if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
             # handle straight deletion:
-            # TODO: record in delted entries table, and send email
             $result = mrbsDelEntry($user_name, $id, false, false);
-            if ($result > 0)
+            if ($result > 0) {
+                $timestamp_old = strtotime($existing_entry['timestamp'] . "Z"); # assume timestamp is UTC
+                $timestamp_new = time();
+                $sql2 = "INSERT INTO mrbs_entry_deleted 
+                         (id, name, create_by, type, description, start_time, end_time, 
+                          repeat_id, room_id, timestamp_old, timestamp_new, delete_by) 
+                         VALUES 
+                         ($id, '{$existing_entry['name']}', '{$existing_entry['create_by']}', '{$existing_entry['type']}',
+                          '{$existing_entry['description']}', {$existing_entry['start_time']}, {$existing_entry['end_time']},
+                          {$existing_entry['repeat_id']}, {$existing_entry['room_id']},
+                          $timestamp_old, $timestamp_new, '$user_name') ";
+                $num_rows = sql_command($sql2);    
+                if ($num_rows < 0) {
+                    trigger_error($sql2);
+                    trigger_error(sql_error());
+                    return_error(500, "entry deleted but unable to update deleted entries table - please contact webmaster");
+                }
                 return_error(204, "deleted entry $id");
-            else
+            } else {
                 return_error(500, "unable to delete entry $id");
+            }
         } else if ($_SERVER['REQUEST_METHOD'] == 'PATCH') {
             # update an existing
             try {
