@@ -73,6 +73,8 @@ echo '<p><center><a href="' . basename($PHP_SELF) . '?' . $QUERY_STRING . '&pvie
 
 <p><center><a href="http://www.court-booking.co.uk" target="_blank">Court Booking System by Jupiterwill</a></center></p>
 
+<p><center>Version 2016.12.13-1</center></p>
+
 <HR>
 </BODY>
 </HTML>
