@@ -58,10 +58,15 @@ if (isset($end_date))
 
 function &get_entries($start_date, $end_date)
 {
-    global $timezone, $tbl_entry, $tbl_room, $start_dt, $end_dt;
+    global $timezone, $tbl_entry, $tbl_room, $start_dt, $end_dt, $now_dt, $with_server_time;
     $area = get_default_area();
 
     $result = array();
+
+    if (isset($with_server_time))
+    {
+        $result['server_time'] = $now_dt->format(DateTime::ISO8601);
+    }
     
     $sql = "SELECT $tbl_room.id, start_time, end_time, name, $tbl_entry.id, type,
             $tbl_entry.description, $tbl_entry.create_by, $tbl_entry.timestamp
@@ -104,6 +109,7 @@ function &get_entries($start_date, $end_date)
     
         $room_slots[$start_time] = $slot;
     }
+
     return $result;
 }
 
