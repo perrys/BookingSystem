@@ -216,7 +216,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
     $user_name = getUserNameForID($user_id);
     if (! $user_name)
         return_error(401, "unrecognized user ID");
- 
+
+    $return_object = NULL;
     if (isset($id)) { # we are altering an existing entry
         $id = intval($id);
         $existing_entry = mrbsGetEntryInfo($id);
@@ -247,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
                     trigger_error(sql_error());
                     return_error(500, "entry deleted but unable to update deleted entries table - please contact webmaster");
                 }
-                return_error(204, "deleted entry $id");
+                $return_object = $existing_entry;
             } else {
                 return_error(500, "unable to delete entry $id");
             }
@@ -262,7 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
                 # assume it is an issue with the input data
                 return_error(400, $e->getMessage());
             }
-            return_error(204, "updated entry $id");
+            $return_object = mrbsGetEntryInfo($id);
         } else {
             return_error(405); # method not allowed
         }
@@ -294,18 +295,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
             return_error(500, "ERROR - failed to create new booking ");        
         }
 
-        # TODO - send email
-
         sql_mutex_unlock("$tbl_entry");
+
+        $return_object = array("id"          => $new_id,
+                               "start_time"  => $start_time->getTimeStamp(),
+                               "end_time"    => $end_time->getTimeStamp(),
+                               "name"        => $data["name"],
+                               "description" => $data["description"],
+                               "room_id"     => $data["court"]);
     }
     
     header("Content-Type: application/json");
-    $result = array("id"    => $new_id,
-                    "start" => $start_time->format(DateTime::ISO8601),
-                    "end"   => $end_time->format(DateTime::ISO8601),
-                    "court" => $data["room"]);
     
-    echo json_encode($result);
+    echo json_encode($return_object);
 }
 
 
