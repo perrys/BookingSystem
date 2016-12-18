@@ -1,7 +1,7 @@
 <?php
 # $Id: trailer.inc,v 1.10.2.1 2006/10/09 15:54:00 jberanek Exp $
 
-include "version.inc";
+include_once "version.inc";
 
 if ( $pview != 1 ) {
 
