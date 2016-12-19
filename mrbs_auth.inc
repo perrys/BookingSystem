@@ -45,7 +45,8 @@ function getUserNameForID($user_id)
          sql_free($res);
          return false;
        case 1:
-         $name = sql_row($res, 0)[0];
+         $row = sql_row($res, 0);
+         $name = $row[0];
          sql_free($res);
          return $name;
        default:
