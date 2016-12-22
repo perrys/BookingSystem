@@ -208,6 +208,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
 
     $user_id = $data["user_id"];
     $expected_token = createTokenRaw(sprintf("id:%d", $user_id));
+    $request_method = $_SERVER['REQUEST_METHOD'];
+    if (isset($method)) 
+    {
+      $request_method = $method;
+    }
 
     if (strcasecmp($expected_token, $data["user_token"]) != 0) {
         return_error(401, "could not authenticate user ID");
@@ -228,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
             return_error(403, "permission dennied for entry $id");
         }
 
-        if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
+        if ($request_method == 'DELETE') {
             # handle straight deletion:
             $result = mrbsDelEntry($user_name, $id, false, false);
             if ($result > 0) {
@@ -252,7 +257,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
             } else {
                 return_error(500, "unable to delete entry $id");
             }
-        } else if ($_SERVER['REQUEST_METHOD'] == 'PATCH') {
+        } else if ($request_method == 'PATCH') {
             # update an existing
             try {
               $nupdated = mrbsUpdateEntry($id, $user_name, $data['name'], $data['type'], $data['description']);
