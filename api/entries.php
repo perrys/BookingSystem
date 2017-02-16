@@ -281,16 +281,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
         adjust_dt($end_time, 0, 0, $data["duration_mins"]);
         
         $entry_type = 0;
-        $repeat_id  = 0;    
+        $repeat_id  = 0;
+        $room_id    = $data["court"];
+        $start_chk  = $start_time->getTimeStamp();
+        $end_chk    = $end_time->getTimeStamp()-1;
+        
 
         # Acquire mutex to lock out others trying to book the same slot(s).
         if (!sql_mutex_lock("$tbl_entry"))
             return_error(503, "couldn't get database table lock");
 
+        # Select any slots which overlap ($starttime,$endtime) for this room:
+	$sql = "SELECT id, name, start_time FROM $tbl_entry WHERE
+		start_time < $end_chk AND end_time > $start_chk
+		AND room_id = $room_id";
+        $res = sql_query($sql);
+        if (! $res) 
+        {
+            trigger_error(sql_error());
+            return_error(500, "internal server error");
+        }
+	if (sql_count($res) > 0)
+	{
+            $err = "ERROR - booking would conflict with the following: ";
+	    for ($i = 0; ($row = sql_row($res, $i)); $i++)
+	    {
+                if ($i > 0)
+                    $err .= ", ";
+                $slot_dt = new DateTime(null, $timezone);
+                $slot_dt->setTimestamp($row[2]);                
+                $err .= $slot_dt->format("H:i") . " " . $row[1];
+            }
+            return_error(409, $err);
+	}
+        
         $new_id = mrbsCreateSingleEntry($start_time->getTimeStamp(), 
                                         $end_time->getTimeStamp(), 
                                         $entry_type, $repeat_id,
-                                        $data["court"],
+                                        $room_id,
                                         $user_name, 
                                         $data["name"], 
                                         $data["type"], 
