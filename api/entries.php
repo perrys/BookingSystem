@@ -303,7 +303,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
         }
 	if (sql_count($res) > 0)
 	{
-            $err = "ERROR - booking would conflict with the following: ";
+            $err = "ERROR - booking would conflict with the following:\n\n";
 	    for ($i = 0; ($row = sql_row($res, $i)); $i++)
 	    {
                 if ($i > 0)
