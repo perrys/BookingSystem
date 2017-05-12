@@ -107,6 +107,30 @@ function showAccessDenied($day, $month, $year, $area)
 <?php
 }
 
+/* showTooLateDenied()
+ * 
+ * Displays an appropate message when access has been denied
+ * 
+ * Retusns: Nothing
+ */
+function showTooLateDenied($day, $month, $year, $area)
+{
+    global $HTTP_REFERER;
+
+    print_header($day, $month, $year, $area);
+?>
+  <H1><?php echo get_vocab("accessdenied")?></H1>
+  <P>
+   It is not possible to delete a court after its start time.
+  </P>
+  <P>
+   <A HREF="<?php echo $HTTP_REFERER; ?>"><?php echo get_vocab("returnprev"); ?></A>
+  </P>
+ </BODY>
+</HTML>
+<?php
+}
+
 function createTokenRaw($message) 
 {
     global $csrf_token_salt;

@@ -15,6 +15,10 @@ if( (getAuthorised(1)) OR ($username1 == "Club") )
 {
 if ($info = mrbsGetEntryInfo($id))
 {
+	if (time() > $info["start_time"]) {
+	    showTooLateDenied($day, $month, $year, $area);
+	    return;
+	}
 	$day   = strftime("%d", $info["start_time"]);
 	$month = strftime("%m", $info["start_time"]);
 	$year  = strftime("%Y", $info["start_time"]);
