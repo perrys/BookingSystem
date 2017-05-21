@@ -38,7 +38,10 @@ function authValidateUser($user, $pass)
    $user=slashes($user);
    $user=strtolower($user);
    $pass = md5($pass);
-   return sql_query1("select count(*) from $tbl_users where name='$user' and password='$pass';");
+   $id = sql_query1("select id from $tbl_users where name='$user' and password='$pass';");
+   if ($id <= 0)
+      return false;
+   return $id;
 }
 
 /* authGetUserLevel($user)
