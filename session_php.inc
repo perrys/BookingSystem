@@ -51,7 +51,8 @@ if (isset($Action) && ($Action == "SetName"))
     } else {
         $NewUserName = unslashes($NewUserName);
         $NewUserPassword = unslashes($NewUserPassword);
-        if (!authValidateUser($NewUserName, $NewUserPassword)) {
+        $id = authValidateUser($NewUserName, $NewUserPassword);
+        if (!$id) {
             print_header(0, 0, 0, 0);
             echo "<P>".get_vocab('unknown_user')."</P>\n";
             printLoginForm($TargetURL);
@@ -60,9 +61,11 @@ if (isset($Action) && ($Action == "SetName"))
 
         if (isset($_SESSION)) {
             $_SESSION["UserName"] = $NewUserName;
+            $_SESSION["UserID"] = $id;
         } else {
             global $HTTP_SESSION_VARS;
             $HTTP_SESSION_VARS["UserName"] = $NewUserName;
+            $HTTP_SESSION_VARS["UserID"] = $id;
         }
     }
 
@@ -155,6 +158,20 @@ function getUserName()
     }
 }
 
+function getUserID()
+{
+    if (isset($_SESSION) && isset($_SESSION["UserID"]) && ($_SESSION["UserID"] != ""))
+    {
+        return $_SESSION["UserID"];
+    }
+    else
+    {
+        global $HTTP_SESSION_VARS;
+        if (isset($HTTP_SESSION_VARS["UserID"]) && ($HTTP_SESSION_VARS["UserID"] != ""))
+            return $HTTP_SESSION_VARS["UserID"];
+    }
+}
+
 // Print the logon entry on the top banner.
 function PrintLogonBox()
 {
@@ -165,6 +182,7 @@ function PrintLogonBox()
     if (isset($url_base) && ($url_base != "")) $TargetURL = $url_base . '/' . $TargetURL;
     if (isset($QUERY_STRING)) $TargetURL = $TargetURL . "?" . $QUERY_STRING;
     $user=getUserName();
+    $id=getUserID();
     if (isset($user))
     {
  
@@ -188,7 +206,7 @@ function PrintLogonBox()
 ?>
               <TD CLASS="banner" BGCOLOR="#C0E0FF" ALIGN=CENTER>
                 <A name="logonBox" href="<?php echo "$search_string\" title=\""
-         . get_vocab('show_my_entries') . "\">" . get_vocab('you_are')." "
+         . get_vocab('show_my_entries') . "\" data-id=\"$id\">" . get_vocab('you_are')." "
          .$user ?></A><br>
                 <FORM METHOD=POST ACTION="admin.php">
 	          <input type="hidden" name="TargetURL" value="<?php echo $TargetURL ?>" />
