@@ -81,7 +81,7 @@ function mrbsCheckFree($room_id, $starttime, $endtime, $ignore, $repignore)
  *   0        - An error occured
  *   non-zero - The entry was deleted
  */
-function mrbsDelEntry($user, $id, $series, $all)
+function mrbsDelEntry($user, $id, $series, $all, $audit_userid)
 {
 	global $tbl_entry, $tbl_repeat;
 
@@ -108,8 +108,16 @@ function mrbsDelEntry($user, $id, $series, $all)
 		if($series && $row[2] == 2 && !$all)
 			continue;
 		
-		if (sql_command("DELETE FROM $tbl_entry WHERE id=" . $row[1]) > 0)
+                $audit = mrbsGetEntryInfo($id);
+		if (sql_command("DELETE FROM $tbl_entry WHERE id=" . $row[1]) > 0) 
+                {
 			$removed++;
+                        if ($audit)
+                        {
+                            mrbs_create_audit_entry($id, $audit['name'], $audit['type'], $audit['description'],
+                                                    $audit['start_time'], $audit['end_time'], $audit['room_id'], $audit['create_by'], "delete", $audit_userid);
+                        }
+                }       
 	}
 	
 	if ($repeat_id > 0 &&
@@ -125,7 +133,7 @@ function mrbsDelEntry($user, $id, $series, $all)
  * that meeting time/place fields are not updatable.
  * 
  */
- function mrbsUpdateEntry($id, $owner, $name, $type, $description) {
+ function mrbsUpdateEntry($id, $owner, $name, $type, $description, $audit_userid) {
     global $tbl_entry;
 
     $sql = "UPDATE $tbl_entry SET create_by = '$owner'"  ;
@@ -155,6 +163,10 @@ function mrbsDelEntry($user, $id, $series, $all)
     if ($num_rows < 0) {
       trigger_error($sql);
       trigger_error(sql_error());
+    } else {
+        $audit = mrbsGetEntryInfo($id);
+        mrbs_create_audit_entry($id, $audit['name'], $audit['type'], $audit['description'],
+                                $audit['start_time'], $audit['end_time'], $audit['room_id'], $audit['create_by'], "update", $audit_userid);
     }
     return $num_rows;
 }
@@ -179,7 +191,7 @@ function mrbsDelEntry($user, $id, $series, $all)
  */
  
 function mrbsCreateSingleEntry($starttime, $endtime, $entry_type, $repeat_id, $room_id,
-                               $owner, $name, $type, $description)
+                               $owner, $name, $type, $description, $audit_userid)
 {
 	global $tbl_entry;
 
@@ -200,7 +212,9 @@ function mrbsCreateSingleEntry($starttime, $endtime, $entry_type, $repeat_id, $r
             trigger_error(sql_error());
             return 0;
         }
-	return sql_insert_id("$tbl_entry", "id");
+        $entry_id = sql_insert_id("$tbl_entry", "id");
+        mrbs_create_audit_entry($entry_id, $name, $type, $description, $starttime, $endtime, $room_id, $owner, "create", $audit_userid);
+	return $entry_id;
 }
 
 /** mrbsCreateRepeatEntry()
@@ -260,6 +274,28 @@ function mrbsCreateRepeatEntry($starttime, $endtime, $rep_type, $rep_enddate, $r
 	if (sql_command($sql) < 0) return 0;
 	
 	return sql_insert_id("$tbl_repeat", "id");
+}
+
+
+/**
+* Create an entry in the audit table for the given update.
+*/
+function mrbs_create_audit_entry($entry_id, $name, $type, $description, $start_time, $end_time, $room_id, $owner, $update_type, $audit_userid = NULL)
+{
+    if (isset($audit_userid)) {
+        $update_gui = "club_website";
+    } else {
+        $update_gui = "booking_website";
+        $audit_userid = getUserID();
+    }
+    $sql = "INSERT INTO mrbs_entry_changes (entry_id, name, type, description, start_time, end_time, room_id, owner, update_type, update_userid, update_gui)
+            VALUES ($entry_id, '$name', '$type', '$description', $start_time, $end_time, $room_id, '$owner', '$update_type', $audit_userid, '$update_gui')";
+
+    if (sql_command($sql) < 0) {            
+        trigger_error($sql);
+        trigger_error(sql_error());
+    }
+    return 0;
 }
 
 /** same_day_next_month()
