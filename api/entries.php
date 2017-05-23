@@ -235,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
 
         if ($request_method == 'DELETE') {
             # handle straight deletion:
-            $result = mrbsDelEntry($user_name, $id, false, false);
+            $result = mrbsDelEntry($user_name, $id, false, false, $user_id);
             if ($result > 0) {
                 $timestamp_old = strtotime($existing_entry['timestamp'] . "Z"); # assume timestamp is UTC
                 $timestamp_new = time();
@@ -260,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
         } else if ($request_method == 'PATCH') {
             # update an existing
             try {
-              $nupdated = mrbsUpdateEntry($id, $user_name, $data['name'], $data['type'], $data['description']);
+              $nupdated = mrbsUpdateEntry($id, $user_name, $data['name'], $data['type'], $data['description'], $user_id);
               if ($nupdated == 0) {
                 return_error(404, "Entry $id not found");
               }
@@ -322,7 +322,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
                                         $user_name, 
                                         $data["name"], 
                                         $data["type"], 
-                                        $data["description"]);
+                                        $data["description"],
+                                        $user_id
+        );
 
         if ($new_id == 0) {
             return_error(500, "ERROR - failed to create new booking ");        
