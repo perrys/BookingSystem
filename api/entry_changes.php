@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
     $result = &get_audit_table($start_dt, $end_dt);
     if (isset($format) and $format == "csv") {        
         header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename=data.csv');
+        header('Content-Disposition: attachment; filename=entry_changes.csv');
         $output = fopen('php://output', 'w');
         $cols = null;
         foreach ($result as $row) {
