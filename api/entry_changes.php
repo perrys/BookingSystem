@@ -82,6 +82,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
     $end_dt->add(new DateInterval("P" . $ndays . "D"));
 
     $result = &get_audit_table($start_dt, $end_dt);
-    header("Content-Type: application/json");
-    echo json_encode($result, true);
+    if (isset($format) and $format == "csv") {        
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=data.csv');
+        $output = fopen('php://output', 'w');
+        $cols = null;
+        foreach ($result as $row) {
+            if (! $cols) {
+                $cols = array_keys($row);
+                fputcsv($output, $cols);
+            }
+            fputcsv($output, $row);
+        }
+    } else {        
+        header("Content-Type: application/json");
+        echo json_encode($result, true);
+    }
 }
