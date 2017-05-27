@@ -79,23 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
     
     $start_dt = dt_from_iso_str($date, $timezone);
     $end_dt = clone $start_dt;
-    $end_dt->add(new DateInterval("P" . $ndays . "D"));
+    adjust_dt($end_dt, $ndays);
 
     $result = &get_audit_table($start_dt, $end_dt);
-    if (isset($format) and $format == "csv") {        
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename=entry_changes.csv');
-        $output = fopen('php://output', 'w');
-        $cols = null;
-        foreach ($result as $row) {
-            if (! $cols) {
-                $cols = array_keys($row);
-                fputcsv($output, $cols);
-            }
-            fputcsv($output, $row);
-        }
-    } else {        
-        header("Content-Type: application/json");
-        echo json_encode($result, true);
-    }
+    output_table($result, "entry_changes_" . $start_dt->format("Y-m-d"));
 }
