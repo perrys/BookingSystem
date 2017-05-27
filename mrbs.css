@@ -49,6 +49,23 @@ TD.banner {vertical-align:middle; background-color:#f0f0f0}
 TD.blue {background-color:#F0F0FF; text-align: center}
 TD.red  {background-color:#FFF0F0}
 TD.green {background-color:#DDFFDD}
+TD.noshow  {
+    background-color:#FF0000
+}
+span.noshow, TD.noshow A  {
+    color:#FFFFFF
+}
+span.noshow {
+    float: right;
+    margin-right: 4px;
+    font-weight: bold;
+}
+form.noshow {
+    margin-bottom: 1em;
+}
+form.noshow_remove {
+    display: inline;
+}
 TD.A {background-color:#FFCCFF; text-align: center}
 TD.B {background-color:#99CCCC}
 TD.C {background-color:#FF9999}
