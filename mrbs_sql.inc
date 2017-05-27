@@ -315,8 +315,9 @@ function mrbs_create_noshow_entry($entry_id, $audit_userid = NULL)
     if (sql_command($sql) < 0) {            
         trigger_error($sql);
         trigger_error(sql_error());
+        return 0;
     }
-    return 0;
+    return $entry_id;
 }
 
 
