@@ -107,6 +107,28 @@ function to_minutes($date)
     return 60 * $hours + $mins;
 }
 
+function output_table(&$data, $filename) {
+    global $format;
+    if (isset($format) and $format == "csv") {
+        if (! isset($filename)) {
+            $filename = "data";
+        }
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . $filename . '.csv');
+        $output = fopen('php://output', 'w');
+        $cols = null;
+        foreach ($data as $row) {
+            if (! $cols) {
+                $cols = array_keys($row);
+                fputcsv($output, $cols);
+            }
+            fputcsv($output, $row);
+        }
+    } else {        
+        header("Content-Type: application/json");
+        echo json_encode($data, true);
+    }
+}
 
 
 ?>
