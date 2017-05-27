@@ -298,6 +298,28 @@ function mrbs_create_audit_entry($entry_id, $name, $type, $description, $start_t
     return 0;
 }
 
+/**
+ * Create an entry in the noshow table.
+ */
+function mrbs_create_noshow_entry($entry_id, $audit_userid = NULL)
+{
+    if (isset($audit_userid)) {
+        $update_gui = "club_website";
+    } else {
+        $update_gui = "booking_website";
+        $audit_userid = getUserID();
+    }
+    $sql = "INSERT INTO mrbs_noshow (entry_id, update_userid, update_gui)
+            VALUES ($entry_id, $audit_userid, '$update_gui')";
+
+    if (sql_command($sql) < 0) {            
+        trigger_error($sql);
+        trigger_error(sql_error());
+    }
+    return 0;
+}
+
+
 /** same_day_next_month()
 * Find the same day of the week in next month, same week number.
 *
