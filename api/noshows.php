@@ -5,6 +5,19 @@ if (! ($_SERVER['REQUEST_METHOD'] == 'GET' || $_SERVER['REQUEST_METHOD'] == 'POS
     return_error(405, "method not allowed");
 }
 
+$allowed_origins = array("http://www.wokingsquashclub.org", "http://localhost:8000");
+
+if (isset($_SERVER['HTTP_ORIGIN'])) 
+{
+    $origin = $_SERVER['HTTP_ORIGIN'];
+    if (in_array($origin, $allowed_origins, true)) 
+    {
+        header('Access-Control-Allow-Origin: '. $origin);
+        header('Access-Control-Allow-Methods: GET'); 
+    } else {
+        return_error(403, "forbidden");
+    }
+}
 
 require_once "../grab_globals.inc.php";
 include "../config.inc.php";
@@ -87,6 +100,7 @@ else if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == '
 
     global $timezone, $tbl_entry;
     $data = json_decode(file_get_contents('php://input'), true);
+    trigger_error($data);
 
     $user_id = $data["user_id"];
     $expected_token = createTokenRaw(sprintf("id:%d", $user_id));
@@ -100,24 +114,31 @@ else if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == '
         return_error(401, "could not authenticate user ID");
     }
 
-    if (isset($id)) { # we are altering an existing entry
+    if (isset($id)) {
         $id = intval($id);
-        $sql = "SELECT update_userid FROM mrbs_noshow WHERE entry_id=$id";
-        $reporter_id = sql_query1($sql);
-        if ($reporter_id <= 0) {
-            return_error(404, "noshow entry not found");
-        }
-        if ($reporter_id != $user_id) {
-            return_error(403, "not authorized to change this entry");
-        }
-        $sql = "DELETE FROM mrbs_noshow WHERE entry_id=$id";    
-        $nrows = sql_command($sql);
-        if ($nrows > 0)
-            return_error(202, "removed");
-        else {
-            trigger_error($sql);
-            trigger_error(sql_error());
-            return_error(500, "delete possibly not completed");
+        if ($request_method == "DELETE") {
+            $sql = "SELECT update_userid FROM mrbs_noshow WHERE entry_id=$id";
+            $reporter_id = sql_query1($sql);
+            if ($reporter_id <= 0) {
+                return_error(404, "noshow entry not found");
+            }
+            if ($reporter_id != $user_id) {
+                return_error(403, "not authorized to change this entry");
+            }
+            $sql = "DELETE FROM mrbs_noshow WHERE entry_id=$id";    
+            $nrows = sql_command($sql);
+            if ($nrows > 0)
+                return_error(202, "removed");
+            else {
+                trigger_error($sql);
+                trigger_error(sql_error());
+                return_error(500, "delete possibly not completed");
+            }
+        } else if ($request_method == "POST") {
+            if (! mrbs_create_noshow_entry($id, $user_id)) {
+                return_error(500, "noshow not created for supplied id");
+            }
+            return_error(201, "created");
         }
     }
 }
