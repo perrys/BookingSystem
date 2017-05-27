@@ -68,11 +68,13 @@ function &get_entries($start_date, $end_date)
         $result['server_time'] = $now_dt->format(DateTime::ISO8601);
     }
     
-    $sql = "SELECT $tbl_room.id, start_time, end_time, name, $tbl_entry.id, type,
-            $tbl_entry.description, $tbl_entry.create_by, $tbl_entry.timestamp
-       FROM $tbl_entry, $tbl_room
-       WHERE $tbl_entry.room_id = $tbl_room.id
-       AND area_id = $area
+    $sql = "SELECT TR.id, start_time, end_time, name, TE.id, type,
+            TE.description, TE.create_by, TE.timestamp,
+            NS.entry_id
+       FROM $tbl_entry TE
+       INNER JOIN $tbl_room TR on TR.id = TE.room_id
+       LEFT JOIN mrbs_noshow NS on TE.id = NS.entry_id
+       WHERE area_id = $area
        AND start_time <= " . $end_dt->getTimeStamp() . "
        AND start_time > "  . $start_dt->getTimeStamp() . "
        ORDER BY start_time";
@@ -80,6 +82,7 @@ function &get_entries($start_date, $end_date)
     $res = sql_query($sql);
     if (! $res) 
     {
+        trigger_error($sql);
         trigger_error(sql_error());
         return_error(500, "internal server error");
     }
@@ -105,7 +108,9 @@ function &get_entries($start_date, $end_date)
                       "type" => $row[5],
                       "description" => $row[6],
                       "created_by" => $row[7],
-                      "timestamp" => $row[8]);
+                      "timestamp" => $row[8],
+                      "no_show" => $row[9] != null
+        );
     
         $room_slots[$start_time] = $slot;
     }
