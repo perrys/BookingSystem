@@ -83,11 +83,12 @@ $td = date("d",$i);
 #Note: The predicate clause 'start_time <= ...' is an equivalent but simpler
 #form of the original which had 3 BETWEEN parts. It selects all entries which
 #occur on or cross the current day.
-$sql = "SELECT $tbl_room.id, start_time, end_time, name, $tbl_entry.id, type,
-        $tbl_entry.description
-   FROM $tbl_entry, $tbl_room
-   WHERE $tbl_entry.room_id = $tbl_room.id
-   AND area_id = $area
+$sql = "SELECT TR.id, start_time, end_time, name, TE.id, type,
+        TE.description, NS.entry_id as no_show
+   FROM $tbl_entry TE
+   INNER JOIN $tbl_room TR ON TE.room_id = TR.id 
+   LEFT JOIN mrbs_noshow NS ON NS.entry_id = TE.id 
+   WHERE area_id = $area
    AND start_time <= $pm7 AND end_time > $am7";
 
 $res = sql_query($sql);
@@ -126,6 +127,7 @@ for ($i = 0; ($row = sql_row($res, $i)); $i++) {
 		$today[$row[0]][date($format,$t)]["color"] = $row[5];
 		$today[$row[0]][date($format,$t)]["data"]  = "";
 		$today[$row[0]][date($format,$t)]["long_descr"]  = "";
+		$today[$row[0]][date($format,$t)]["no_show"]  = $row[7];
 	}
 
 	# Show the name of the booker in the first segment that the booking
@@ -274,16 +276,20 @@ $stagger = 1;
 				$color = $today[$room][$time_t]["color"];
 				$descr = htmlspecialchars($today[$room][$time_t]["data"]);
 				$long_descr = htmlspecialchars($today[$room][$time_t]["long_descr"]);
+				$no_show = $today[$room][$time_t]["no_show"];
 			}
 			else
+			{
+                                unset($no_show);
 				unset($id);
+			}
 
 			# $c is the colour of the cell that the browser sees. White normally,
 			# red if were hightlighting that line and a nice attractive green if the room is booked.
 	
 # We tell if its booked by $id having something in it
-			if (isset($id))
-				$c = $color;
+			if (isset($id)) 
+				$c = isset($no_show) ? "noshow" : $color;
 			elseif (isset($timetohighlight) && ($time_t == $timetohighlight))
 				$c = "red";
 			else
@@ -344,7 +350,10 @@ else {$book = 0;}
 
 
 #if it is booked then show
+				if (isset($no_show))
+					echo "<span class='noshow'>NO SHOW</span>";
 				echo " <a href=\"view_entry$suffix.php?id=$id&area=$area&day=$day&month=$month&year=$year\" title=\"$long_descr\">$descr</a>";
+                                
 			}
 			else
 				echo "&nbsp;\"&nbsp;";
