@@ -177,10 +177,11 @@ if ( $pview != 1 ) {
 # This data will be retrieved day-by-day
 for ($j = 0; $j<=($num_of_days-1) ; $j++) {
 
-	$sql = "SELECT start_time, end_time, type, name, id, description
-	        FROM $tbl_entry
-	        WHERE room_id = $room
-	        AND start_time <= $pm7[$j] AND end_time > $am7[$j]";
+	$sql = "SELECT TE.start_time, TE.end_time, TE.type, TE.name, TE.id, TE.description, NS.entry_id
+	        FROM $tbl_entry TE
+                LEFT JOIN mrbs_noshow NS ON NS.entry_id = TE.id 
+	        WHERE TE.room_id = $room
+	        AND TE.start_time <= $pm7[$j] AND TE.end_time > $am7[$j]";
 
 	# Each row returned from the query is a meeting. Build an array of the
 	# form:  d[weekday][slot][x], where x = id, color, data, long_desc.
@@ -223,6 +224,9 @@ for ($j = 0; $j<=($num_of_days-1) ; $j++) {
  			$d[$j][date($format,$t)]["color"] = $row[2];
  			$d[$j][date($format,$t)]["data"]  = "";
  			$d[$j][date($format,$t)]["long_descr"]  = "";
+ 			$d[$j][date($format,$t)]["no_show"]  = $row[6];
+			$d[$j][date($format,$t)]["is_last"]  = ($t == $end_t);
+                        
  		}
  
  		# Show the name of the booker in the first segment that the booking
@@ -371,16 +375,21 @@ for (
  			$color = $d[$thisday][$time_t]["color"];
  			$descr = htmlspecialchars($d[$thisday][$time_t]["data"]);
  			$long_descr = htmlspecialchars($d[$thisday][$time_t]["long_descr"]);
+ 			$no_show = $d[$thisday][$time_t]["no_show"];
+			$is_last = $d[$thisday][$time_t]["is_last"];
  		}
  		else
+                {
+ 			unset($no_show);
  			unset($id);
+                }
  		
  		# $c is the colour of the cell that the browser sees. White normally, 
  		# red if were hightlighting that line and a nice attractive green if the room is booked.
  		
 # We tell if its booked by $id having something in it
  		if (isset($id))
- 			$c = $color;
+ 			$c = isset($no_show) ? "noshow" : $color;
  		elseif (isset($timetohighlight) && ($time_t == $timetohighlight))
  			$c = "red";
  		else
@@ -444,7 +453,11 @@ if (($stagger == 55) OR ($stagger == 56)) {$book = 1;}
                        		. "title=\"$long_descr\">$descr</a>";
 		}
  		else
+ 		{
+        	        if (isset($no_show) && $is_last)
+				echo "<span class='noshow'>NO SHOW</span>";
 			echo "&nbsp;\"&nbsp;";
+                }
  
 		echo "</td>\n";
 	}
