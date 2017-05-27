@@ -52,23 +52,25 @@ if( $series ){
 }
 else {
 	$sql = "
-	SELECT $tbl_entry.name,
-	       $tbl_entry.description,
-	       $tbl_entry.create_by,
-	       $tbl_room.room_name,
-	       $tbl_area.area_name,
-	       $tbl_entry.type,
-	       $tbl_entry.room_id,
-	       " . sql_syntax_timestamp_to_unix("$tbl_entry.timestamp") . ",
-	       ($tbl_entry.end_time - $tbl_entry.start_time),
-	       $tbl_entry.start_time,
-	       $tbl_entry.end_time,
-	       $tbl_entry.repeat_id
-
-	FROM  $tbl_entry, $tbl_room, $tbl_area
-	WHERE $tbl_entry.room_id = $tbl_room.id
-		AND $tbl_room.area_id = $tbl_area.id
-		AND $tbl_entry.id=$id
+	SELECT TE.name,
+	       TE.description,
+	       TE.create_by,
+	       TR.room_name,
+	       TA.area_name,
+	       TE.type,
+	       TE.room_id,
+	       " . sql_syntax_timestamp_to_unix("TE.timestamp") . ",
+	       (TE.end_time - TE.start_time),
+	       TE.start_time,
+	       TE.end_time,
+	       TE.repeat_id,
+	       NS.timestamp as noshow_ts,
+	       NS.update_userid as noshow_reporter
+	FROM  $tbl_entry TE
+	INNER JOIN $tbl_room TR ON  TE.room_id = TR.id
+	INNER JOIN $tbl_area TA ON  TR.area_id = TA.id
+        LEFT JOIN mrbs_noshow NS ON NS.entry_id = TE.id
+	WHERE TE.id=$id
 	";
 }
 
@@ -101,6 +103,8 @@ $updated      = time_date_string($row[7]);
 $start_time_1 = $row[9];
 $end_time_1   = $row[10];
 $repeat_id    = $row[11];
+$noshow_ts    = $row[12];
+$noshow_rep   = $row[13];
 
 # need to make DST correct in opposite direction to entry creation
 # so that user see what he expects to see
@@ -225,11 +229,45 @@ $repeat_key = "rep_type_" . $rep_type;
     <td><b><?php echo get_vocab("lastupdate") ?></b></td>
     <td><?php    echo $updated ?></td>
    </tr>
-   
 </table>
 <br>
 <p>
 <?php
+
+$timezone = new DateTimeZone('Europe/London');
+$slot_dt  = new DateTime(null, $timezone);
+$slot_dt->setTimestamp($start_time_1);
+$now_dt = new DateTime(null, $timezone);
+$diff = $slot_dt->diff($now_dt);
+$user = getUserName();
+$diff_minutes = (60*$diff->h + $diff->i);
+if ($diff->invert)
+   $diff_minutes *= -1;
+$past_start_time = $diff_minutes >= 15;
+
+if (isset($user) && $diff->days == 0 && $past_start_time) {
+   if ($noshow_ts != null) {
+      echo "<p>Reported as a NO SHOW on $noshow_ts. ";
+      if ($level == 2 || $noshow_rep == getUserID()) {
+?>
+    <form method="POST" action="report_noshow_handler.php" class="noshow">
+        <input type="hidden" name="id" value="<?php echo "$id"; ?>" />
+        <input type="hidden" name="action" value="remove_no_show" />        
+        <button type="submit">Remove No Show</button>
+    </form>
+<?php
+      }
+   } else {
+?>
+    <form method="POST" action="report_noshow_handler.php" class="noshow">
+        <input type="hidden" name="id" value="<?php echo "$id"; ?>" />
+        <input type="hidden" name="action" value="report_no_show" />        
+        <button type="submit">Report a NO SHOW</button>
+    </form>
+<?php
+   }    
+}
+
 
 # Only an admin can edit a fixed entry
 if ($level == 2) {
@@ -242,35 +280,27 @@ if($repeat_id)
 
 if($repeat_id || $series )
 	echo "<a href=\"edit_entry.php?id=$id&edit_type=series&day=$day&month=$month&year=$year\">".get_vocab("editseries")."</a>";
+        echo "<BR>";
 }
-?>
-<BR>
 
-<?php
-if( ! $series )
+
+
+if ($diff->days < 0 || ($diff->days == 0 && !$past_start_time) || $level == 2 ) {
+
+    if( ! $series )
 	echo "<A HREF=\"del_entry.php?id=$id&series=0&name=$name&create_by=$create_by&type=$type&description=$description&start_time_1=$start_time_1&end_time_1=$end_time_1&repeat_id=$repeat_id&room_id=$room_id&timestamp_1=$timestamp_1\" onClick=\"return confirm('".get_vocab("confirmdel")."');\">".get_vocab("deleteentry")."</A>";
 
-if($repeat_id)
+    if($repeat_id)
 	echo " - ";
 
-if($repeat_id || $series )
-	echo "<A HREF=\"del_entry.php?id=$id&series=1&day=$day&month=$month&year=$year\" onClick=\"return confirm('".get_vocab("confirmdel")."');\">".get_vocab("deleteseries")."</A>";
-	
+    if($repeat_id || $series )
+	echo "<A HREF=\"del_entry.php?id=$id&series=1&day=$day&month=$month&year=$year\" onClick=\"return confirm('".get_vocab("confirmdel")."');\">".get_vocab("deleteseries")."</A>";	
 
-?>
-<BR>
-<?php
+    echo "<BR>";
 
+    echo "<A HREF=\"edit_description_fixed.php?id=$id&series=0&name=$name&create_by=$create_by&type=$type&description=$description&start_time_1=$start_time_1&end_time_1=$end_time_1&repeat_id=$repeat_id&room_id=$room_id&timestamp_1=$timestamp_1&duration=$duration&dur_units=$dur_units\">Edit Description</A>";
 
-	echo "<A HREF=\"edit_description_fixed.php?id=$id&series=0&name=$name&create_by=$create_by&type=$type&description=$description&start_time_1=$start_time_1&end_time_1=$end_time_1&repeat_id=$repeat_id&room_id=$room_id&timestamp_1=$timestamp_1&duration=$duration&dur_units=$dur_units\">Edit Description</A>";
-
-
-
-
-
-
-
-	
+}
 
 ?>
 <BR>
