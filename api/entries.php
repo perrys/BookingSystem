@@ -267,7 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
             try {
               $nupdated = mrbsUpdateEntry($id, $user_name, $data['name'], $data['type'], $data['description'], $user_id);
               if ($nupdated == 0) {
-                return_error(404, "Entry $id not updated");
+                return_error(304, "Entry $id not updated");
               }
             } catch (Exception $e) {
                 # assume it is an issue with the input data
