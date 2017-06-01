@@ -99,6 +99,8 @@ function mrbsDelEntry($user, $id, $series, $all, $audit_userid)
 	$res = sql_query($sql);
 	
 	$removed = 0;
+        $rightnow = time();
+        
 	
 	for ($i = 0; ($row = sql_row($res, $i)); $i++)
 	{
@@ -107,21 +109,22 @@ function mrbsDelEntry($user, $id, $series, $all, $audit_userid)
 		
 		if($series && $row[2] == 2 && !$all)
 			continue;
-		
-                $audit = mrbsGetEntryInfo($id);
-		if (sql_command("DELETE FROM $tbl_entry WHERE id=" . $row[1]) > 0) 
-                {
+		$id = $row[1];
+		$audit = mrbsGetEntryInfo($id);
+		$delta_t = $rightnow - $audit["start_time"];
+		if ($delta_t_mins > 0) { 
+			trigger_error("cannot delete an entry after its start time");
+		} else if (sql_command("DELETE FROM $tbl_entry WHERE id=" . $id) > 0) {
 			$removed++;
-                        if ($audit)
-                        {
-                            mrbs_create_audit_entry($id, $audit['name'], $audit['type'], $audit['description'],
-                                                    $audit['start_time'], $audit['end_time'], $audit['room_id'], $audit['create_by'], "delete", $audit_userid);
-                        }
-                }       
+			if ($audit)
+			{
+				mrbs_create_audit_entry($id, $audit['name'], $audit['type'], $audit['description'],
+				$audit['start_time'], $audit['end_time'], $audit['room_id'], $audit['create_by'], "delete", $audit_userid);
+			}
+		}   
 	}
 	
-	if ($repeat_id > 0 &&
-            sql_query1("SELECT count(*) FROM $tbl_entry WHERE repeat_id=$repeat_id") == 0)
+	if ($repeat_id > 0 && sql_query1("SELECT count(*) FROM $tbl_entry WHERE repeat_id=$repeat_id") == 0)
 		sql_command("DELETE FROM $tbl_repeat WHERE id=$repeat_id");
 	
 	return $removed > 0;
@@ -309,6 +312,19 @@ function mrbs_create_noshow_entry($entry_id, $audit_userid = NULL)
         $update_gui = "booking_website";
         $audit_userid = getUserID();
     }
+
+    $existing_entry = mrbsGetEntryInfo($entry_id);
+    if (! $existing_entry) {
+        trigger_error("booking not found");
+        return 0;
+    }
+    $rightnow = time();
+    $delta_t_mins = ($rightnow - $existing_entry["start_time"]) / 60.0;
+    if ($delta_t_mins < 15) { 
+        trigger_error("cannot report noshow less than 15 minutes after start time");
+        return 0;
+    }
+    
     $sql = "INSERT INTO mrbs_noshow (entry_id, update_userid, update_gui)
             VALUES ($entry_id, $audit_userid, '$update_gui')";
 
