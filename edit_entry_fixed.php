@@ -155,7 +155,7 @@ $name = ucwords ($name) ;
 <TR>
 <?php
 # Only allow Admin or Club to change the name of booker
-if (($name == "Admin") OR ($name == "Club"))
+if ((authGetUserLevel(getUserName(), $auth["admin"]) >= 2) OR (authGetUserLevel(getUserName(), $auth["coach"]) >= 2) OR ($name == "Club"))
 { ?>
 <TD CLASS=CR><B><?php echo get_vocab("namebooker")?></B></TD>
   <TD CLASS=CL><INPUT NAME="name" SIZE=40 VALUE="<?php echo htmlspecialchars($name,ENT_NOQUOTES) ?>"></TD></TR>
@@ -276,7 +276,7 @@ if ( ( !isset( $id ) ) Xor ( isset( $rep_type ) && ( $rep_type != 0 ) && ( "seri
 </TR>
 </TABLE>
 
-<?php if (($name !== "Admin") AND ($name !=="Club")) { ?> 
+<?php if (! (($name == "Club") OR (authGetUserLevel(getUserName(), $auth["admin"]) >= 2) OR (authGetUserLevel(getUserName(), $auth["coach"]) >= 2))) { ?> 
 <INPUT TYPE=HIDDEN NAME="name"   VALUE="<?php echo $name ?>">
 <?php } ?> 
 

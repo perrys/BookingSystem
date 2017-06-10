@@ -287,7 +287,14 @@ $name = ucwords ($name) ;
 <TR>
 <TD CLASS=CR><B><?php echo get_vocab("namebooker")?></B></TD>
 <TD CLASS=CL>
-<?php echo $name ?> </TD>
+<?php
+if ((authGetUserLevel(getUserName(), $auth["admin"]) >= 2) || (authGetUserLevel(getUserName(), $auth["coach"]) >= 2) || ($name == "Club")) {
+  echo "<INPUT NAME='name'   VALUE='$name'>";
+} else {
+  echo "<INPUT TYPE='HIDDEN' NAME='name'   VALUE='$name'>";
+  echo $name;
+}
+?> </TD>
 </TR>
 <TR><TD CLASS=TR><B>Description:</B></TD>
   <TD
@@ -415,7 +422,6 @@ this.document.writeln("</td></tr>");
 </TR>
 </TABLE>
 
-<INPUT TYPE=HIDDEN NAME="name"   VALUE="<?php echo $name ?>">
 <INPUT TYPE=HIDDEN NAME="returl"    VALUE="<?php echo $HTTP_REFERER?>">
 <INPUT TYPE=HIDDEN NAME="day"   VALUE="<?php echo $start_day?>">
 <INPUT TYPE=HIDDEN NAME="month"   VALUE="<?php echo $start_month?>">
