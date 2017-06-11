@@ -50,6 +50,7 @@ if (isset($Action) && ($Action == "SetName"))
         }
     } else {
         $NewUserName = unslashes($NewUserName);
+        $NewUserName = trim($NewUserName);
         $NewUserPassword = unslashes($NewUserPassword);
         $id = authValidateUser($NewUserName, $NewUserPassword);
         if (!$id) {
@@ -206,7 +207,7 @@ function PrintLogonBox()
 ?>
               <TD CLASS="banner" BGCOLOR="#C0E0FF" ALIGN=CENTER>
                 <A name="logonBox" href="<?php echo "$search_string\" title=\""
-         . get_vocab('show_my_entries') . "\" data-id=\"$id\">" . get_vocab('you_are')." "
+         . get_vocab('show_my_entries') . "\" data-id=\"$id\" data-user=\"$user\">" . get_vocab('you_are')." "
          .$user ?></A><br>
                 <FORM METHOD=POST ACTION="admin.php">
 	          <input type="hidden" name="TargetURL" value="<?php echo $TargetURL ?>" />
