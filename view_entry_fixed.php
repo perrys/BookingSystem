@@ -283,9 +283,7 @@ if($repeat_id || $series )
         echo "<BR>";
 }
 
-
-
-if ($diff->days < 0 || ($diff->days == 0 && !$past_start_time) || $level == 2 ) {
+if ($diff->days * ($diff->invert ? -1 : 1) < 0 || ($diff->days == 0 && !$past_start_time) || $level == 2 ) {
 
     if( ! $series )
 	echo "<A HREF=\"del_entry.php?id=$id&series=0&name=$name&create_by=$create_by&type=$type&description=$description&start_time_1=$start_time_1&end_time_1=$end_time_1&repeat_id=$repeat_id&room_id=$room_id&timestamp_1=$timestamp_1\" onClick=\"return confirm('".get_vocab("confirmdel")."');\">".get_vocab("deleteentry")."</A>";
