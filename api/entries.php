@@ -237,9 +237,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
         if (! getWritable($existing_entry["create_by"], $user_name)) {
             return_error(403, "permission dennied for entry $id");
         }
+        $auth_level = authGetUserLevel($user_name, $auth["admin"]);
 
         if ($request_method == 'DELETE') {
             # handle straight deletion:
+            $rightnow = time();
+            $delta_t = $rightnow - $existing_entry["start_time"];
+            if ($delta_t > 0 && $auth_level < 2) { 
+                return_error(403, "cannot delete and entry after its start time " . $delta_t);
+            }
+            
             $result = mrbsDelEntry($user_name, $id, false, false, $user_id);
             if ($result > 0) {
                 $timestamp_old = strtotime($existing_entry['timestamp'] . "Z"); # assume timestamp is UTC
@@ -297,20 +304,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
             return_error(503, "couldn't get database table lock");
 
         # Select any slots which overlap ($starttime,$endtime) for this room:
-	$sql = "SELECT id, name, start_time FROM $tbl_entry WHERE
-		start_time < $end_chk AND end_time > $start_chk
-		AND room_id = $room_id";
+        $sql = "SELECT id, name, start_time FROM $tbl_entry WHERE
+                start_time < $end_chk AND end_time > $start_chk
+                AND room_id = $room_id";
         $res = sql_query($sql);
         if (! $res) 
         {
             trigger_error(sql_error());
             return_error(500, "internal server error");
         }
-	if (sql_count($res) > 0)
-	{
+        if (sql_count($res) > 0)
+        {
             $err = "ERROR - booking would conflict with the following:\n\n";
-	    for ($i = 0; ($row = sql_row($res, $i)); $i++)
-	    {
+            for ($i = 0; ($row = sql_row($res, $i)); $i++)
+            {
                 if ($i > 0)
                     $err .= ", ";
                 $slot_dt = new DateTime(null, $timezone);
@@ -318,7 +325,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'DELET
                 $err .= $slot_dt->format("H:i") . " " . $row[1];
             }
             return_error(409, $err);
-	}
+        }
         
         $new_id = mrbsCreateSingleEntry($start_time->getTimeStamp(), 
                                         $end_time->getTimeStamp(), 
