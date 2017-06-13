@@ -99,7 +99,6 @@ function mrbsDelEntry($user, $id, $series, $all, $audit_userid)
 	$res = sql_query($sql);
 	
 	$removed = 0;
-        $rightnow = time();
         
 	
 	for ($i = 0; ($row = sql_row($res, $i)); $i++)
@@ -111,10 +110,7 @@ function mrbsDelEntry($user, $id, $series, $all, $audit_userid)
 			continue;
 		$id = $row[1];
 		$audit = mrbsGetEntryInfo($id);
-		$delta_t = $rightnow - $audit["start_time"];
-		if ($delta_t > 0) { 
-			trigger_error("cannot delete an entry after its start time");
-		} else if (sql_command("DELETE FROM $tbl_entry WHERE id=" . $id) > 0) {
+		if (sql_command("DELETE FROM $tbl_entry WHERE id=" . $id) > 0) {
 			$removed++;
 			if ($audit)
 			{
