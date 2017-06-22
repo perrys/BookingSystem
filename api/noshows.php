@@ -57,6 +57,9 @@ function &get_noshow_table($start_dt, $end_dt)
         $start_date = $slot_dt->format("Y-m-d");
         $start_time = $slot_dt->format("H:i");
         $duration   = $row[5] - $start;
+        $owner      = $row[7];
+        $owner_id   = intval(sql_query1("SELECT id FROM mrbs_users WHERE name='" . $owner . "'"));
+        $owner_id   = $owner_id < 0 ? null : $owner_id;
         
         $slot = array("entry_id" => intval($row[0]),
                       "name" => $row[1],
@@ -65,8 +68,9 @@ function &get_noshow_table($start_dt, $end_dt)
                       "date" => $start_date, 
                       "time" => $start_time, 
                       "duration_mins" => $duration / 60, 
-                      "court" => $row[6],
-                      "owner" => $row[7],
+                      "court" => intval($row[6]),
+                      "owner" => $owner,
+                      "owner_userid" => $owner_id,
                       "reporter_userid" => intval($row[8]),
                       "reporter_name" => $row[9],
                       "update_gui" => $row[10],
