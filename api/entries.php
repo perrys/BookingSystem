@@ -70,7 +70,7 @@ function &get_entries($start_date, $end_date)
     
     $sql = "SELECT TR.id, start_time, end_time, name, TE.id, type,
             TE.description, TE.create_by, TE.timestamp,
-            NS.entry_id
+            NS.entry_id, TE.created_ts
        FROM $tbl_entry TE
        INNER JOIN $tbl_room TR on TR.id = TE.room_id
        LEFT JOIN mrbs_noshow NS on TE.id = NS.entry_id
@@ -107,6 +107,7 @@ function &get_entries($start_date, $end_date)
                       "id" => intval($row[4]),
                       "type" => $row[5],
                       "description" => $row[6],
+                      "created_ts" => $row[10],
                       "created_by" => $row[7],
                       "timestamp" => $row[8],
                       "no_show" => $row[9] != null
