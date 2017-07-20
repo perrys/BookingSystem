@@ -163,7 +163,9 @@ else
 # Acquire mutex to lock out others trying to book the same slot(s).
 if (!sql_mutex_lock("$tbl_entry"))
     fatal_error(1, get_vocab("failed_to_acquire"));
-    
+
+$delete_original = true;
+
 # Check for any schedule conflicts in each room we're going to try and
 # book in
 
@@ -217,14 +219,33 @@ if (!sql_mutex_lock("$tbl_entry"))
             else
                 $entry_type = 0;
 
-            # Create the entry:
-            $new_id = mrbsCreateSingleEntry($starttime, $endtime, $entry_type, $repeat_id, $room_id,
-                                     $create_by, $name, $type, $description);
+            $mail_previous = null;
+            include_once "functions_mail.inc";
+            if ( isset($id) )
+            {
+                $mail_previous = getPreviousEntryData($id, 0);
+            }
+            
+            if ($mail_previous != null and
+                $starttime  == $mail_previous["start_time"] and
+                $endtime    == $mail_previous["end_time"] and
+                $entry_type == $mail_previous["entry_type"] and
+                $repeat_id  == $mail_previous["repeat_id"] and
+                $room_id    == $mail_previous["room_id"])
+            {
+                # Just an update to metadata, so we can update the entry in place:
+                mrbsUpdateEntry($id, $create_by, $name, $type, $description);
+                $new_id = $id;
+                $delete_original = false;
+            } else {            
+                # Create the entry:
+                $new_id = mrbsCreateSingleEntry($starttime, $endtime, $entry_type, $repeat_id, $room_id,
+                                                $create_by, $name, $type, $description);
+            }
             // Send a mail to the Administrator
             if (MAIL_ADMIN_ON_BOOKINGS or MAIL_AREA_ADMIN_ON_BOOKINGS or
                 MAIL_ROOM_ADMIN_ON_BOOKINGS or MAIL_BOOKER)
             {
-                include_once "functions_mail.inc";
                 // Send a mail only if this a new entry, or if this is an
                 // edited entry but we have to send mail on every change,
                 // and if mrbsCreateRepeatingEntrys is successful
@@ -245,10 +266,6 @@ if (!sql_mutex_lock("$tbl_entry"))
                     }
                     // If this is a modified entry then call
                     // getPreviousEntryData to prepare entry comparison.
-                   if ( isset($id) )
-                    {
-                        $mail_previous = getPreviousEntryData($id, 0);
-                    }
                     $result = notifyAdminOnBooking(!isset($id), $new_id);
                 }
             }
@@ -256,7 +273,7 @@ if (!sql_mutex_lock("$tbl_entry"))
 
 
     # Delete the original entry
-    if(isset($id))
+    if(isset($id) and $delete_original)
         mrbsDelEntry(getUserName(), $id, ($edit_type == "series"), 1);
 
     sql_mutex_unlock("$tbl_entry");
