@@ -600,6 +600,7 @@ function getPreviousEntryData($id, $series)
             e.create_by,
             r.room_name,
             a.area_name,
+            e.entry_type,
             e.type,
             e.room_id,
             e.repeat_id, " .
@@ -641,12 +642,17 @@ function getPreviousEntryData($id, $series)
     $mail_previous['createdby']     = $row['create_by'];
     $mail_previous['room_name']     = $row['room_name'];
     $mail_previous['area_name']     = $row['area_name'];
+    $mail_previous['entry_type']    = $row['entry_type'];
     $mail_previous['type']          = $row['type'];
     $mail_previous['room_id']       = $row['room_id'];
     $mail_previous['repeat_id']     = $row['repeat_id'];
     $mail_previous['updated']       = getMailTimeDateString($row[8]);
     $mail_previous['area_admin_email'] = $row['area_admin_email'];
     $mail_previous['room_admin_email'] = $row['room_admin_email'];
+    
+    $mail_previous['start_time'] = $row['tbl_e_start_time'];
+    $mail_previous['end_time']   = $row['tbl_e_end_time'];
+    
     // If we use periods
     if ( $enable_periods )
     {
