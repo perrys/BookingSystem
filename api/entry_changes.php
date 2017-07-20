@@ -24,7 +24,7 @@ function &get_audit_table($start_dt, $end_dt)
 
     $result = array();
 
-    $sql = "SELECT entry_id, MC.name, type, description, start_time, end_time, room_id, owner, update_type, MU.name, update_userid, update_gui, timestamp 
+    $sql = "SELECT entry_id, MC.name, type, description, start_time, end_time, room_id, owner, update_type, MU.name, update_userid, update_gui, timestamp, created_ts 
             FROM mrbs_entry_changes MC, mrbs_users MU
             WHERE MC.update_userid = MU.id 
             AND timestamp <= '" . $end_dt->format("Y-m-d") . "'
@@ -55,6 +55,7 @@ function &get_audit_table($start_dt, $end_dt)
                       "time" => $start_time, 
                       "duration_mins" => $duration / 60, 
                       "court" => $row[6],
+                      "created_ts" => $row[13],
                       "owner" => $row[7],
                       "update_type" => $row[8],
                       "update_username" => $row[9],
