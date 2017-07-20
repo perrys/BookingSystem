@@ -36,7 +36,7 @@ function &get_noshow_table($start_dt, $end_dt)
     $result = array();
 
     $sql = "SELECT TE.id, TE.name, TE.type, TE.description, TE.start_time, TE.end_time, TE.room_id, TE.create_by, 
-                   NS.update_userid, TU.name, NS.update_gui, NS.timestamp 
+                   NS.update_userid, TU.name, NS.update_gui, NS.timestamp, TE.created_ts 
             FROM mrbs_noshow NS
             INNER JOIN mrbs_entry TE ON TE.id = NS.entry_id
             LEFT JOIN mrbs_users TU ON TU.id = NS.update_userid
@@ -69,6 +69,7 @@ function &get_noshow_table($start_dt, $end_dt)
                       "time" => $start_time, 
                       "duration_mins" => $duration / 60, 
                       "court" => intval($row[6]),
+                      "created_ts" => $row[12],
                       "owner" => $owner,
                       "owner_userid" => $owner_id,
                       "reporter_userid" => intval($row[8]),
