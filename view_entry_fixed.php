@@ -65,7 +65,8 @@ else {
 	       TE.end_time,
 	       TE.repeat_id,
 	       NS.timestamp as noshow_ts,
-	       NS.update_userid as noshow_reporter
+	       NS.update_userid as noshow_reporter,
+	       " . sql_syntax_timestamp_to_unix("TE.created_ts") . "
 	FROM  $tbl_entry TE
 	INNER JOIN $tbl_room TR ON  TE.room_id = TR.id
 	INNER JOIN $tbl_area TA ON  TR.area_id = TA.id
@@ -103,8 +104,11 @@ $updated      = time_date_string($row[7]);
 $start_time_1 = $row[9];
 $end_time_1   = $row[10];
 $repeat_id    = $row[11];
-$noshow_ts    = $row[12];
-$noshow_rep   = $row[13];
+if (! $series ) {
+    $noshow_ts    = $row[12];
+    $noshow_rep   = $row[13];
+    $created = time_date_string($row[14]);
+}
 
 # need to make DST correct in opposite direction to entry creation
 # so that user see what he expects to see
@@ -221,6 +225,12 @@ $repeat_key = "rep_type_" . $rep_type;
     <td><b><?php echo get_vocab("type") ?></b></td>
     <td><?php    echo empty($typel[$type]) ? "?$type?" : $typel[$type] ?></td>
    </tr>
+   <?php if (! $series) { ?>
+       <tr>
+           <td><b>Created: </b></td>
+           <td><?php    echo $created ?></td>
+       </tr>
+   <?php } ?>
    <tr>
     <td><b><?php echo get_vocab("createdby") ?></b></td>
     <td><?php    echo $create_by ?></td>
