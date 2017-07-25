@@ -125,6 +125,7 @@ $vocab["unknown_user"]       = "Unknown user";
 $vocab["you_are"]            = "You are";
 $vocab["login"]              = "Log in";
 $vocab["logoff"]             = "Log Off";
+$vocab["submit"]             = "Go";
 
 # Authentication database
 $vocab["user_list"]          = "User list";
