@@ -94,19 +94,21 @@ function printLoginForm($TargetURL)
   <?php echo get_vocab("please_login") ?>
 </p>
 <form method="post" action="<?php echo basename($PHP_SELF) ?>">
+  <input type="hidden" name="TargetURL" value="<?php echo $TargetURL ?>" />
+  <input type="hidden" name="Action" value="SetName" /> 
   <table>
     <tr>
-      <td align="right"><?php echo get_vocab("user_name") ?></td>
+      <td align="right" style='padding-right: 0.5em;'><?php echo get_vocab("user_name") ?>:</td>
       <td><input type="text" name="NewUserName" /></td>
     </tr>
     <tr>
-      <td align="right"><?php echo get_vocab("user_password") ?></td>
-      <td><input type="password" name="NewUserPassword" /></td>
+      <td align="right" style='padding-right: 0.5em;'><?php echo get_vocab("user_password") ?>:</td>
+      <td>
+        <input type="password" name="NewUserPassword" />
+        <input type="submit" value=" <?php echo get_vocab('submit') ?> " />
+      </td>
     </tr>
   </table>
-  <input type="hidden" name="TargetURL" value="<?php echo $TargetURL ?>" /> <br />
-  <input type="hidden" name="Action" value="SetName" /> <br />
-  <input type="submit" value=" <?php echo get_vocab('login') ?> " /> <br />
 </form>
 </body>
 </html>
