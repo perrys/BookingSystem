@@ -114,8 +114,7 @@ function mrbsDelEntry($user, $id, $series, $all, $audit_userid)
 			$removed++;
 			if ($audit)
 			{
-				mrbs_create_audit_entry($id, $audit['name'], $audit['type'], $audit['description'],
-				$audit['start_time'], $audit['end_time'], $audit['room_id'], $audit['create_by'], $audit['created_ts'], "delete", $audit_userid);
+				mrbs_create_audit_entry($id, $audit, "delete", $audit_userid);
 			}
 		}   
 	}
@@ -163,9 +162,7 @@ function mrbsDelEntry($user, $id, $series, $all, $audit_userid)
       trigger_error($sql);
       trigger_error(sql_error());
     } else {
-        $audit = mrbsGetEntryInfo($id);
-        mrbs_create_audit_entry($id, $audit['name'], $audit['type'], $audit['description'],
-                                $audit['start_time'], $audit['end_time'], $audit['room_id'], $audit['create_by'], $audit['created_ts'], "update", $audit_userid);
+        mrbs_create_audit_entry($id, null, "update", $audit_userid);
     }
     return $num_rows;
 }
@@ -212,7 +209,7 @@ function mrbsCreateSingleEntry($starttime, $endtime, $entry_type, $repeat_id, $r
             return 0;
         }
         $entry_id = sql_insert_id("$tbl_entry", "id");
-        mrbs_create_audit_entry($entry_id, $name, $type, $description, $starttime, $endtime, $room_id, $owner, null, "create", $audit_userid);
+        mrbs_create_audit_entry($entry_id, null, "create", $audit_userid);
 	return $entry_id;
 }
 
@@ -279,21 +276,33 @@ function mrbsCreateRepeatEntry($starttime, $endtime, $rep_type, $rep_enddate, $r
 /**
 * Create an entry in the audit table for the given update.
 */
-function mrbs_create_audit_entry($entry_id, $name, $type, $description, $start_time, $end_time, $room_id, $owner, $created_timestamp, $update_type, $audit_userid = NULL)
+function mrbs_create_audit_entry($entry_id, $audit, $update_type, $audit_userid = NULL)
 {
+    if (! $audit) {
+        $audit = mrbsGetEntryInfo($entry_id);
+    }
+    if (! $audit) {
+        trigger_error("Entry \"$entry_id\" not found - unable to create audit entry");
+        return;
+    }
+ 
+    $name                 = $audit['name'];
+    $type                 = $audit['type'];
+    $description          = $audit['description'];
+    $start_time           = $audit['start_time'];
+    $end_time             = $audit['end_time'];
+    $room_id              = $audit['room_id'];
+    $owner                = $audit['create_by'];
+    $created_timestamp    = $audit['created_ts'];
+    
     if (isset($audit_userid)) {
         $update_gui = "club_website";
     } else {
         $update_gui = "booking_website";
         $audit_userid = getUserID();
     }
-    $field_suffix = $values_suffix = '';
-    if ($created_timestamp != null) {
-      $field_suffix = ", created_ts";
-      $value_suffix = ", '$created_timestamp'";
-    }     
-    $sql = "INSERT INTO mrbs_entry_changes (entry_id, name, type, description, start_time, end_time, room_id, owner, update_type, update_userid, update_gui $field_suffix)    
-            VALUES ($entry_id, '$name', '$type', '$description', $start_time, $end_time, $room_id, '$owner', '$update_type', $audit_userid, '$update_gui' $value_suffix)";
+    $sql = "INSERT INTO mrbs_entry_changes (entry_id, name, type, description, start_time, end_time, room_id, owner, update_type, update_userid, update_gui, created_ts)    
+            VALUES ($entry_id, '$name', '$type', '$description', $start_time, $end_time, $room_id, '$owner', '$update_type', $audit_userid, '$update_gui', '$created_timestamp')";
 
     if (sql_command($sql) < 0) {            
         trigger_error($sql);
