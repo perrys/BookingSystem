@@ -189,7 +189,7 @@ function add_free_slots($date, &$day_bookings, $room)
 if ($_SERVER['REQUEST_METHOD'] == 'GET')
 {        
     $result = &get_entries($start_date, $end_date, $id);
-    if (isset($with_tokens))
+    if (!isset($id) && isset($with_tokens))
     {
         $iter_dt = clone $start_dt;
 
