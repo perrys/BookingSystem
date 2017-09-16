@@ -56,7 +56,7 @@ if (isset($end_date))
 }
     
 
-function &get_entries($start_date, $end_date)
+function &get_entries($start_date, $end_date, $id)
 {
     global $timezone, $tbl_entry, $tbl_room, $start_dt, $end_dt, $now_dt, $with_server_time;
     $area = get_default_area();
@@ -74,11 +74,16 @@ function &get_entries($start_date, $end_date)
        FROM $tbl_entry TE
        INNER JOIN $tbl_room TR on TR.id = TE.room_id
        LEFT JOIN mrbs_noshow NS on TE.id = NS.entry_id
-       WHERE area_id = $area
+       WHERE area_id = $area ";
+    if (isset($id))
+    {
+        $sql .= " AND TE.id = " . $id;
+    } else {
+        $sql .= "
        AND start_time <= " . $end_dt->getTimeStamp() . "
        AND start_time > "  . $start_dt->getTimeStamp() . "
        ORDER BY start_time";
-    
+    }    
     $res = sql_query($sql);
     if (! $res) 
     {
@@ -183,7 +188,7 @@ function add_free_slots($date, &$day_bookings, $room)
 
 if ($_SERVER['REQUEST_METHOD'] == 'GET')
 {        
-    $result = &get_entries($start_date, $end_date);
+    $result = &get_entries($start_date, $end_date, $id);
     if (isset($with_tokens))
     {
         $iter_dt = clone $start_dt;
