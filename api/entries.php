@@ -68,12 +68,13 @@ function &get_entries($start_date, $end_date, $id)
         $result['server_time'] = $now_dt->format(DateTime::ISO8601);
     }
     
-    $sql = "SELECT TR.id, start_time, end_time, name, TE.id, type,
+    $sql = "SELECT TR.id, start_time, end_time, TE.name, TE.id, type,
             TE.description, TE.create_by, TE.timestamp,
-            NS.entry_id, TE.created_ts
+            NS.entry_id, TE.created_ts, TU.id
        FROM $tbl_entry TE
        INNER JOIN $tbl_room TR on TR.id = TE.room_id
        LEFT JOIN mrbs_noshow NS on TE.id = NS.entry_id
+       LEFT JOIN mrbs_users TU ON TU.name = TE.create_by
        WHERE area_id = $area ";
     if (isset($id))
     {
@@ -114,6 +115,7 @@ function &get_entries($start_date, $end_date, $id)
                       "description" => $row[6],
                       "created_ts" => $row[10],
                       "created_by" => $row[7],
+                      "created_by_id" => isset($row[11]) ? intval($row[11]) : null,
                       "timestamp" => $row[8],
                       "no_show" => $row[9] != null
         );
