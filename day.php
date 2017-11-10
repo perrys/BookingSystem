@@ -252,6 +252,7 @@ $stagger = 1;
 	( $dst_change != -1 ) ? $j = 1 : $j = 0;
 	
 	$row_class = "even_row";
+        $end_second = $eveningends * 3600 + $eveningends_minutes * 60;
 	for (
 		$t = mktime($morningstarts, $morningstarts_minutes, 0, $month, $day+$j, $year);
 		$t <= mktime($eveningends, $eveningends_minutes, 0, $month, $day+$j, $year);
@@ -306,10 +307,15 @@ $stagger = 1;
 			tdcell($c);
 
 # If the room isnt booked then allow it to be booked
-if ($stagger_set > 1)
-{$book = ($stagger - $room) %3;
-if (($stagger == 55) OR ($stagger == 56)) {$book = 1;} }
-else {$book = 0;}
+if ($stagger_set > 1) {
+  $book = ($stagger - $room) %3;
+  $day_seconds = $t % (24 * 3600);
+  if ($day_seconds > ($end_second - (($stagger_set-1) * $resolution))) {
+    $book = 1;
+  }
+} else {
+  $book = 0;
+}
 
 			if(!isset($id))
 			{
