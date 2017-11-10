@@ -42,6 +42,12 @@ if (empty($room))
 	$room = get_default_room($area);
 # Note $room will be 0 if there are no rooms; this is checked for below.
 
+$spec = get_start_end($year, $month, $day);
+$morningstarts         = $spec[0] ;
+$morningstarts_minutes = $spec[1] ;
+$eveningends           = $spec[2] ;
+$eveningends_minutes   = $spec[3] ;
+
 # print the page header
 print_header($day, $month, $year, $area);
 
