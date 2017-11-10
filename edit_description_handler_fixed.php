@@ -94,7 +94,7 @@ if(isset($all_day) && ($all_day == "yes"))
     }
     else
     {
-        $starttime = mktime($morningstarts, 0, 0, $month, $day  , $year, is_dst($month, $day  , $year));
+        $starttime = mktime(9, 0, 0, $month, $day  , $year, is_dst($month, $day  , $year));
         $end_minutes = $eveningends_minutes + $morningstarts_minutes;
         ($eveningends_minutes > 59) ? $end_minutes += 60 : '';
         $endtime   = mktime($eveningends, $end_minutes, 0, $month, $day, $year, is_dst($month, $day, $year));

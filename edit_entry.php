@@ -164,11 +164,8 @@ if( empty( $room_id ) )
 }
 
 # If we have not been provided with starting time
-if( empty( $start_hour ) && $morningstarts < 10 )
-	$start_hour = "0$morningstarts";
-
 if( empty( $start_hour ) )
-	$start_hour = "$morningstarts";
+	$start_hour = "08";
 
 if( empty( $start_min ) )
 	$start_min = "00";
