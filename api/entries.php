@@ -128,7 +128,13 @@ function &get_entries($start_date, $end_date, $id)
 
 function add_free_slots($date, &$day_bookings, $room)
 {
-    global $morningstarts, $morningstarts_minutes, $eveningends, $eveningends_minutes, $resolution, $stagger_set, $now_dt, $cutoff_dt;
+    global $starts_ends, $resolution, $stagger_set, $now_dt, $cutoff_dt;
+    $spec = get_start_end_for_date($date);
+    $morningstarts         = $spec[0] ;
+    $morningstarts_minutes = $spec[1] ;
+    $eveningends           = $spec[2] ;
+    $eveningends_minutes   = $spec[3] ;
+    
     $resolution_mins  = $resolution / 60;
     $room_offset_mins = ($room-1) * $resolution_mins;
     $start_mins       = $morningstarts * 60 + $morningstarts_minutes + $room_offset_mins; 
