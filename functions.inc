@@ -603,4 +603,32 @@ function cross_dst ( $start, $end )
 
 	return $modification;
 }
+
+function get_start_end_for_date($date)
+{
+    global $starts_ends;
+    $date_str = $date->format("Y-m-d");
+    foreach ($starts_ends as $start_date => $spec) {
+        if ($date_str >= $start_date) {
+            $starts = explode(":", $spec[0]);
+            $ends   = explode(":", $spec[1]);
+            return array(
+                intval($starts[0]),
+                intval($starts[1]),
+                intval($ends[0]),
+                intval($ends[1]),
+            );
+        }
+    }
+    return null;
+}
+
+function get_start_end($year, $month, $day)
+{
+    $timezone = new DateTimeZone('Europe/London');
+    $date = new DateTime(null, $timezone);
+    $date->setDate($year, $month, $day);
+    return get_start_end_for_date($date);
+}
+        
 ?>
