@@ -24,6 +24,14 @@ if (!isset($day) or !isset($month) or !isset($year))
 if (empty($area))
 	$area = get_default_area();
 
+
+$spec = get_start_end($year, $month, $day);
+$morningstarts         = $spec[0] ;
+$morningstarts_minutes = $spec[1] ;
+$eveningends           = $spec[2] ;
+$eveningends_minutes   = $spec[3] ;
+
+
 # print the page header
 print_header($day, $month, $year, $area);
 
