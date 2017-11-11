@@ -78,7 +78,7 @@ function &get_entries($start_date, $end_date, $id)
        WHERE area_id = $area ";
     if (isset($id))
     {
-        $sql .= " AND TE.id = " . $id;
+        $sql .= " AND TE.id = " . intval($id);
     } else {
         $sql .= "
        AND start_time <= " . $end_dt->getTimeStamp() . "
