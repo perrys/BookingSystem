@@ -359,7 +359,7 @@ else {
 if ($level == 2) {
     $list = sql_query("select * from $tbl_users order by name");
 } else {
-    $list = sql_query("select id, name, password, email from $tbl_users where active=1 order by name");
+    $list = sql_query("select id, name, password, email from $tbl_users order by name");
 }
 print "<table border=1>\n";
 print "<tr>";
