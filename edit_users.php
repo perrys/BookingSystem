@@ -60,8 +60,21 @@ CREATE TABLE $tbl_users
     $nusers = 0;
     }
 
+$user = getUserName();
+$level = authGetUserLevel($user, $auth["admin"]);
+// Do not allow unidentified people to browse the list.
+if(!getAuthorised(1))
+{
+    showAccessDenied($day, $month, $year, $area);
+    exit;
+}
+
 /* Get the list of fields actually in the table. (Allows the addition of new fields later on) */
-$result = sql_query("select * from $tbl_users limit 1");
+if ($level == 2) {
+    $result = sql_query("select * from $tbl_users limit 1");
+} else {
+    $result = sql_query("select id, name, password, email from $tbl_users limit 1");
+}
 $nfields = sql_num_fields($result);
 for ($i=0; $i<$nfields ;$i++)
     {
@@ -96,14 +109,6 @@ $initial_user_creation = 0;
 
 if ($nusers > 0)
 {
-    $user = getUserName();
-    $level = authGetUserLevel($user, $auth["admin"]);
-    // Do not allow unidentified people to browse the list.
-    if(!getAuthorised(1))
-    {
-        showAccessDenied($day, $month, $year, $area);
-        exit;
-    }
 }
 else /* We've just created the table. Assume the person doing this IS the administrator. */
 {
@@ -344,14 +349,28 @@ if ($level == 2) /* Administrators get the right to add new users */
     print "\t<input style=\"margin:0\" type=submit value=\"" . get_vocab("add_new_user") . "\" />\n";
     print "</form></p>\n";
     }
-
-$list = sql_query("select * from $tbl_users order by name");
+else {
+?>
+    <p><span style="font-weight: bold; font-size: 1.5em; color:red;">NOTE:</span> Contact details are no longer available from this website. Please refer to the membership list on the
+    <a href="http://www.wokingsquashclub.org/memberlist" target="_blank" style="text-decoration: underline;">main club website</a> instead.</p>
+<?php
+}
+     
+if ($level == 2) {
+    $list = sql_query("select * from $tbl_users order by name");
+} else {
+    $list = sql_query("select id, name, password, email from $tbl_users where active=1 order by name");
+}
 print "<table border=1>\n";
 print "<tr>";
 // The first 2 columns are the user rights and user name.
 print "<th>" . get_vocab("rights") . "</th><th>" . get_vocab("user_name") . "</th>";
 // The remaining columns are all the columns from the database, past the initial 3 (id, name, password).
-for ($i=3; $i<$nfields; $i++) print "<th>" . get_loc_field_name($i) . "</th>";
+if ($level == 2)
+    $first_col = 3;
+else
+    $first_col = 4;
+for ($i=$first_col; $i<$nfields; $i++) print "<th>" . get_loc_field_name($i) . "</th>";
 print "<th>" . get_vocab("action") . "</th>";
 print "</tr>\n";
 $i = 0; 
@@ -387,8 +406,9 @@ while ($line = sql_row($list, $i++))
             }
 	 	if ($j == 3)	/* The 4th data is the email address, which is clickable (JW 11/12/07). */
             {
-			 print "\t\t<td><a href=\"mailto:$col_value\">$col_value</a></td>\n";
-            continue;
+                if ($level == 2)
+		    print "\t\t<td><a href=\"mailto:$col_value\">$col_value</a></td>\n";
+                continue;
             }
 			
 			
